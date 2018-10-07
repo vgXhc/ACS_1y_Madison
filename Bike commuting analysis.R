@@ -149,11 +149,12 @@ year <- c(seq(2006, 2017, by=1))
 ModeShare <- cbind(ModeShare, year)
 ModeError <- cbind(ModeError, year)
 
-
+# merge into combined data frame
 ModeCombined <- merge(ModeShare, ModeError)
-#add variables for minimum and maximum
-ModeCombined$bike_min <- ModeCombined$`( Bicycle / Total )` - ModeCombined$`SE Bicycle`
-ModeCombined$bike_max <- ModeCombined$`( Bicycle / Total )` + ModeCombined$`SE Bicycle`
+
+#create variables for minimum and maximum for each variable
+ModeCombined$MVmin <- ModeCombined$ - ModeCombined$`SE Bicycle`
+ModeCombined$MVmax <- ModeCombined$`( Bicycle / Total )` + ModeCombined$`SE Bicycle`
 ##Now let's try plotting the bike mode share by year
 g <- plot(ModeShare$`( Bicycle / Total )` ~ ModeShare$year, type = "o", ylim = c(0,0.06))
 
