@@ -67,15 +67,11 @@ ModeSharePercent2007 <- apply(ACSData2007[,c(2,3,8,14,15,17)], MARGIN=1, FUN=div
 ModeSharePercent2006 <- apply(ACSData2006[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2006[,1], method="proportion",
                               verbose=F)
-
-
-
 ## You can access things in the acs objects with the @ operator
 ## Let's construct a new variable that contains the years as rows and just bike mode
 ## mode share for now
 ## you can access things in objects with the @ operator
 ## the data.frame() function will allow to create the new data frame
-## maybe I also need the as.numeric function
 
 ## first we extract vectors with just the mode share numbers for each year
 ## this produces vectors with numeric data
@@ -89,6 +85,9 @@ modeShare2012 <- ModeSharePercent2012@estimate
 modeShare2011 <- ModeSharePercent2011@estimate
 modeShare2010 <- ModeSharePercent2010@estimate
 modeShare2009 <- ModeSharePercent2009@estimate
+modeShare2008 <- ModeSharePercent2008@estimate
+modeShare2007 <- ModeSharePercent2007@estimate
+modeShare2006 <- ModeSharePercent2006@estimate
 
 errorShare2017 <- ModeSharePercent2017@standard.error
 errorShare2016 <- ModeSharePercent2016@standard.error
@@ -99,19 +98,43 @@ errorShare2012 <- ModeSharePercent2012@standard.error
 errorShare2011 <- ModeSharePercent2011@standard.error
 errorShare2010 <- ModeSharePercent2010@standard.error
 errorShare2009 <- ModeSharePercent2009@standard.error
+errorShare2008 <- ModeSharePercent2008@standard.error
+errorShare2007 <- ModeSharePercent2007@standard.error
+errorShare2006 <- ModeSharePercent2006@standard.error
 
 
-##create a new variable for year, starting at 2016 and counting down to 2009
-year <- c(seq(2009, 2017, by=1))
+
 
 ## combine the years of mode share data into one vector
-ModeShare <- rbind(modeShare2009, modeShare2010, modeShare2011, modeShare2012, 
-                        modeShare2013,modeShare2014, modeShare2015,modeShare2016, modeShare2017)
+ModeShare <- rbind(modeShare2006, 
+                   modeShare2007, 
+                   modeShare2008, 
+                   modeShare2009, 
+                   modeShare2010, 
+                   modeShare2011, 
+                   modeShare2012, 
+                   modeShare2013,
+                   modeShare2014, 
+                   modeShare2015,
+                   modeShare2016, 
+                   modeShare2017)
 
-ModeError <- rbind(errorShare2009, errorShare2010, errorShare2011, errorShare2012,
-                   errorShare2013, errorShare2014, errorShare2015, errorShare2016, errorShare2017)
+ModeError <- rbind(errorShare2006,
+                   errorShare2007,
+                   errorShare2008,
+                   errorShare2009, 
+                   errorShare2010, 
+                   errorShare2011, 
+                   errorShare2012,
+                   errorShare2013, 
+                   errorShare2014, 
+                   errorShare2015, 
+                   errorShare2016, 
+                   errorShare2017)
 
-colnames(ModeError) <- c("SE Motor Vehicle", "SE Public Transit", "SE Bicycle", "SE Walked")
+# change names for variable in both ModeShare and ModeError
+colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicyle", "Walked", "Worked from home")
+colnames(ModeError) <- c("SE Motor Vehicle", "SE Drove alone", "SE Transit", "SE Bicycle", "SE Walked", "SE Worked from home")
 ## change name of the rows to the years
 #row.names(ModeShare) <- year
 #row.names(ModeError) <- year
@@ -120,7 +143,8 @@ colnames(ModeError) <- c("SE Motor Vehicle", "SE Public Transit", "SE Bicycle", 
 ModeShare <- as.data.frame(ModeShare)
 ModeError <- as.data.frame(ModeError)
 
-
+##create a new variable for year, starting at 2017 and counting down to 2006
+year <- c(seq(2006, 2017, by=1))
 ## add a column for the year variable
 ModeShare <- cbind(ModeShare, year)
 ModeError <- cbind(ModeError, year)
