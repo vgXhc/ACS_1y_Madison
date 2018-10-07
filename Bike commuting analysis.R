@@ -74,70 +74,37 @@ ModeSharePercent2006 <- apply(ACSData2006[,c(2,3,8,14,15,17)], MARGIN=1, FUN=div
 ## the data.frame() function will allow to create the new data frame
 
 ## first we extract vectors with just the mode share numbers for each year
-## this produces vectors with numeric data
+## this produces vectors with numeric data. Use rbind to combine them
+ModeShare <- rbind(ModeSharePercent2017@estimate,
+                   ModeSharePercent2016@estimate,
+                   ModeSharePercent2015@estimate,
+                   ModeSharePercent2014@estimate,
+                   ModeSharePercent2013@estimate,
+                   ModeSharePercent2012@estimate,
+                   ModeSharePercent2011@estimate,
+                   ModeSharePercent2010@estimate,
+                   ModeSharePercent2009@estimate,
+                   ModeSharePercent2008@estimate,
+                   ModeSharePercent2007@estimate,
+                   ModeSharePercent2006@estimate)
 
-modeShare2017 <- ModeSharePercent2017@estimate
-modeShare2016 <- ModeSharePercent2016@estimate
-modeShare2015 <- ModeSharePercent2015@estimate
-modeShare2014 <- ModeSharePercent2014@estimate
-modeShare2013 <- ModeSharePercent2013@estimate
-modeShare2012 <- ModeSharePercent2012@estimate
-modeShare2011 <- ModeSharePercent2011@estimate
-modeShare2010 <- ModeSharePercent2010@estimate
-modeShare2009 <- ModeSharePercent2009@estimate
-modeShare2008 <- ModeSharePercent2008@estimate
-modeShare2007 <- ModeSharePercent2007@estimate
-modeShare2006 <- ModeSharePercent2006@estimate
-
-errorShare2017 <- ModeSharePercent2017@standard.error
-errorShare2016 <- ModeSharePercent2016@standard.error
-errorShare2015 <- ModeSharePercent2015@standard.error
-errorShare2014 <- ModeSharePercent2014@standard.error
-errorShare2013 <- ModeSharePercent2013@standard.error
-errorShare2012 <- ModeSharePercent2012@standard.error
-errorShare2011 <- ModeSharePercent2011@standard.error
-errorShare2010 <- ModeSharePercent2010@standard.error
-errorShare2009 <- ModeSharePercent2009@standard.error
-errorShare2008 <- ModeSharePercent2008@standard.error
-errorShare2007 <- ModeSharePercent2007@standard.error
-errorShare2006 <- ModeSharePercent2006@standard.error
-
-
-
-
-## combine the years of mode share data into one vector
-ModeShare <- rbind(modeShare2006, 
-                   modeShare2007, 
-                   modeShare2008, 
-                   modeShare2009, 
-                   modeShare2010, 
-                   modeShare2011, 
-                   modeShare2012, 
-                   modeShare2013,
-                   modeShare2014, 
-                   modeShare2015,
-                   modeShare2016, 
-                   modeShare2017)
-
-ModeError <- rbind(errorShare2006,
-                   errorShare2007,
-                   errorShare2008,
-                   errorShare2009, 
-                   errorShare2010, 
-                   errorShare2011, 
-                   errorShare2012,
-                   errorShare2013, 
-                   errorShare2014, 
-                   errorShare2015, 
-                   errorShare2016, 
-                   errorShare2017)
+ModeError <- rbind(ModeSharePercent2017@standard.error,
+                   ModeSharePercent2016@standard.error,
+                   ModeSharePercent2015@standard.error,
+                   ModeSharePercent2014@standard.error,
+                   ModeSharePercent2013@standard.error,
+                   ModeSharePercent2012@standard.error,
+                   ModeSharePercent2011@standard.error,
+                   ModeSharePercent2010@standard.error,
+                   ModeSharePercent2009@standard.error,
+                   ModeSharePercent2008@standard.error,
+                   ModeSharePercent2007@standard.error,
+                   ModeSharePercent2006@standard.error)
 
 # change names for variable in both ModeShare and ModeError
 colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicyle", "Walked", "Worked from home")
 colnames(ModeError) <- c("SE Motor Vehicle", "SE Drove alone", "SE Transit", "SE Bicycle", "SE Walked", "SE Worked from home")
-## change name of the rows to the years
-#row.names(ModeShare) <- year
-#row.names(ModeError) <- year
+
 ## convert into a data frame
 
 ModeShare <- as.data.frame(ModeShare)
