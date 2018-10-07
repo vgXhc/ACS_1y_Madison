@@ -9,54 +9,30 @@ geo.lookup(state="WI", county="Dane", place="Madison")
 
 Madison <- geo.make(state="WI", place = 48000)
 
-## select only the total, car/truck/van, public transport, bicycle, walk variable from table B08006
-TransitVars <- acs.lookup(2017, span = 1, table.number = "B08006", dataset = "acs")[c(1,2,8,14,15)]
+## select only the total, car/truck/van, public transport, bicycle, walked, worked at home variable from table B08006
+TransitVars <- acs.lookup(2017, span = 1, table.number = "B08006", dataset = "acs")[c(1,2,8,14,15,17)]
+
+# read data from files downloaded from FactFinder
+ACSData2017 <- read.acs("data/ACS_17_1YR_B08006_with_ann.csv", endyear = 17, span = 1)
+ACSData2016 <- read.acs("data/ACS_16_1YR_B08006_with_ann.csv", endyear = 16, span = 1)
+ACSData2015 <- read.acs("data/ACS_15_1YR_B08006_with_ann.csv", endyear = 15, span = 1)
+ACSData2014 <- read.acs("data/ACS_14_1YR_B08006_with_ann.csv", endyear = 14, span = 1)
+ACSData2013 <- read.acs("data/ACS_13_1YR_B08006_with_ann.csv", endyear = 13, span = 1)
+ACSData2012 <- read.acs("data/ACS_12_1YR_B08006_with_ann.csv", endyear = 12, span = 1)
+ACSData2011 <- read.acs("data/ACS_11_1YR_B08006_with_ann.csv", endyear = 11, span = 1)
+ACSData2010 <- read.acs("data/ACS_10_1YR_B08006_with_ann.csv", endyear = 10, span = 1)
+ACSData2009 <- read.acs("data/ACS_09_1YR_B08006_with_ann.csv", endyear = 09, span = 1)
+ACSData2008 <- read.acs("data/ACS_08_1YR_B08006_with_ann.csv", endyear = 08, span = 1)
+ACSData2007 <- read.acs("data/ACS_07_1YR_B08006_with_ann.csv", endyear = 07, span = 1)
+ACSData2006 <- read.acs("data/ACS_06_EST_B08006_with_ann.csv", endyear = 06, span = 1)
 
 #fetch actual data for all available year and return them into acs objects
-ACSData2017 <- acs.fetch(2017, geography = Madison, 
-                         #table.number = "B08006",
-                         variable = c("B08006_001", "B08006_002", "B08006_008", "B08006_014", "B08006_015"),
-                         dataset = "acs",
-                         span = 1,
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
 
-ACSData2016 <- acs.fetch(2016, geography = Madison, 
-                     variable = TransitVars,
-                     span = 1,
-                     col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-ACSData2015 <- acs.fetch(2015, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-ACSData2014 <- acs.fetch(2014, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-ACSData2013 <- acs.fetch(2013, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-ACSData2012 <- acs.fetch(2012, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-ACSData2011 <- acs.fetch(2011, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-ACSData2010 <- acs.fetch(2010, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-ACSData2009 <- acs.fetch(2009, geography = Madison, 
-                         variable = TransitVars, 
-                         col.names = c("Total", "Motor Vehicle", "Public transit", "Bicycle", "Walked"))
-
-
-
-## To get percentages, you have to use this complicated method that I don't fully understand
+## To get percentages with the correct margins of error, 
+## you have to use this complicated method
 
 ModeSharePercent2017 <- apply(ACSData2017[,2:5], MARGIN=1, FUN=divide.acs,
-                              denominator=ACSData2016[,1], method="proportion",
+                              denominator=ACSData2017[,1], method="proportion",
                               verbose=F)
 ModeSharePercent2016 <- apply(ACSData2016[,2:5], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2016[,1], method="proportion",
@@ -94,6 +70,7 @@ ModeSharePercent2009 <- apply(ACSData2009[,2:5], MARGIN=1, FUN=divide.acs,
 ## first we extract vectors with just the mode share numbers for each year
 ## this produces vectors with numeric data
 
+modeShare2017 <- ModeSharePercent2017@estimate
 modeShare2016 <- ModeSharePercent2016@estimate
 modeShare2015 <- ModeSharePercent2015@estimate
 modeShare2014 <- ModeSharePercent2014@estimate
@@ -103,6 +80,7 @@ modeShare2011 <- ModeSharePercent2011@estimate
 modeShare2010 <- ModeSharePercent2010@estimate
 modeShare2009 <- ModeSharePercent2009@estimate
 
+errorShare2017 <- ModeSharePercent2017@standard.error
 errorShare2016 <- ModeSharePercent2016@standard.error
 errorShare2015 <- ModeSharePercent2015@standard.error
 errorShare2014 <- ModeSharePercent2014@standard.error
@@ -114,23 +92,23 @@ errorShare2009 <- ModeSharePercent2009@standard.error
 
 
 ##create a new variable for year, starting at 2016 and counting down to 2009
-year <- c(seq(2009, 2016, by=1))
+year <- c(seq(2009, 2017, by=1))
 
 ## combine the years of mode share data into one vector
 ModeShare <- rbind(modeShare2009, modeShare2010, modeShare2011, modeShare2012, 
-                        modeShare2013,modeShare2014, modeShare2015,modeShare2016)
+                        modeShare2013,modeShare2014, modeShare2015,modeShare2016, modeShare2017)
 
 ModeError <- rbind(errorShare2009, errorShare2010, errorShare2011, errorShare2012,
-                   errorShare2013, errorShare2014, errorShare2015, errorShare2016)
+                   errorShare2013, errorShare2014, errorShare2015, errorShare2016, errorShare2017)
 
+colnames(ModeError) <- c("SE Motor Vehicle", "SE Public Transit", "SE Bicycle", "SE Walked")
 ## change name of the rows to the years
-row.names(ModeShare) <- year
-row.names(ModeError) <- year
+#row.names(ModeShare) <- year
+#row.names(ModeError) <- year
 ## convert into a data frame
 
 ModeShare <- as.data.frame(ModeShare)
 ModeError <- as.data.frame(ModeError)
-
 
 
 ## add a column for the year variable
@@ -139,12 +117,24 @@ ModeError <- cbind(ModeError, year)
 
 
 ModeCombined <- merge(ModeShare, ModeError)
-
+#add variables for minimum and maximum
+ModeCombined$bike_min <- ModeCombined$`( Bicycle / Total )` - ModeCombined$`SE Bicycle`
+ModeCombined$bike_max <- ModeCombined$`( Bicycle / Total )` + ModeCombined$`SE Bicycle`
 ##Now let's try plotting the bike mode share by year
 g <- plot(ModeShare$`( Bicycle / Total )` ~ ModeShare$year, type = "o", ylim = c(0,0.06))
 
 g <- barplot(ModeShare[,3])
 
-g <- ggplot(data = ModeShare, aes(, ModeShare$`( Bicycle / Total )`), color = "red") + geom_point()
-
+g <- ggplot(data = ModeCombined, 
+            aes(x = ModeCombined$year, 
+                y = ModeCombined$`( Bicycle / Total )`, 
+                color = "red")) + 
+            geom_point() + 
+            geom_line(color = "blue") +
+            theme_classic() +
+            xlab("Year") +
+            ylab("Percent biking to work") +
+            scale_y_continuous(labels = scales::percent, limits = c(0,0.08)) +
+            geom_linerange(aes(ymin = ModeCombined$bike_min, ymax = ModeCombined$bike_max))
+g
 
