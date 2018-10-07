@@ -26,38 +26,48 @@ ACSData2008 <- read.acs("data/ACS_08_1YR_B08006_with_ann.csv", endyear = 08, spa
 ACSData2007 <- read.acs("data/ACS_07_1YR_B08006_with_ann.csv", endyear = 07, span = 1)
 ACSData2006 <- read.acs("data/ACS_06_EST_B08006_with_ann.csv", endyear = 06, span = 1)
 
-#fetch actual data for all available year and return them into acs objects
 
 ## To get percentages with the correct margins of error, 
-## you have to use this complicated method
+## you have to use this complicated method; calculating percentages for motor vehicle, drive alone,
+## public transit, bicycle, walked, worked at home
 
-ModeSharePercent2017 <- apply(ACSData2017[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2017 <- apply(ACSData2017[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2017[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2016 <- apply(ACSData2016[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2016 <- apply(ACSData2016[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2016[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2015 <- apply(ACSData2015[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2015 <- apply(ACSData2015[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2015[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2014 <- apply(ACSData2014[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2014 <- apply(ACSData2014[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2014[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2013 <- apply(ACSData2013[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2013 <- apply(ACSData2013[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2013[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2012 <- apply(ACSData2012[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2012 <- apply(ACSData2012[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2012[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2011 <- apply(ACSData2011[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2011 <- apply(ACSData2011[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2011[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2010 <- apply(ACSData2010[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2010 <- apply(ACSData2010[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2010[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2009 <- apply(ACSData2009[,2:5], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2009 <- apply(ACSData2009[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2009[,1], method="proportion",
                               verbose=F)
+ModeSharePercent2008 <- apply(ACSData2008[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+                              denominator=ACSData2008[,1], method="proportion",
+                              verbose=F)
+ModeSharePercent2007 <- apply(ACSData2007[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+                              denominator=ACSData2007[,1], method="proportion",
+                              verbose=F)
+ModeSharePercent2006 <- apply(ACSData2006[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+                              denominator=ACSData2006[,1], method="proportion",
+                              verbose=F)
+
 
 
 ## You can access things in the acs objects with the @ operator
