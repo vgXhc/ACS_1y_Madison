@@ -102,7 +102,7 @@ ModeError <- rbind(ModeSharePercent2017@standard.error,
                    ModeSharePercent2006@standard.error)
 
 # change names for variable in both ModeShare and ModeError
-colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicyle", "Walked", "Worked from home")
+colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicycle", "Walked", "Worked from home")
 colnames(ModeError) <- c("SE Motor Vehicle", "SE Drove alone", "SE Transit", "SE Bicycle", "SE Walked", "SE Worked from home")
 
 ## convert into a data frame
@@ -129,7 +129,7 @@ ModeCombined$DrvAlnmax <- ModeCombined$`Drove alone` + ModeCombined$`SE Drove al
 ModeCombined$PTmin <- ModeCombined$Transit - ModeCombined$`SE Transit`
 ModeCombined$PTmax <- ModeCombined$Transit + ModeCombined$`SE Transit`
 
-ModeCombined$Bikemin <- ModeCombined$`Bicycle` - ModeCombined$`SE Bicycle`
+ModeCombined$Bikemin <- ModeCombined$Bicycle - ModeCombined$`SE Bicycle`
 ModeCombined$Bikemax <- ModeCombined$`Bicycle` + ModeCombined$`SE Bicycle`
 
 ModeCombined$Walkmin <- ModeCombined$Walked - ModeCombined$`SE Walked`
@@ -140,20 +140,18 @@ ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worke
 
 
 ##Now let's try plotting the bike mode share by year
-g <- plot(ModeShare$`( Bicycle / Total )` ~ ModeShare$year, type = "o", ylim = c(0,0.06))
-
-g <- barplot(ModeShare[,3])
 
 g <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
-                y = ModeCombined$`( Bicycle / Total )`, 
+                y = ModeCombined$Bicycle, 
                 color = "red")) + 
             geom_point() + 
             geom_line(color = "blue") +
             theme_classic() +
             xlab("Year") +
             ylab("Percent biking to work") +
+            scale_x_continuous(breaks = c(2006:2017)) +
             scale_y_continuous(labels = scales::percent, limits = c(0,0.08)) +
-            geom_linerange(aes(ymin = ModeCombined$bike_min, ymax = ModeCombined$bike_max))
+            geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax))
 g
 
