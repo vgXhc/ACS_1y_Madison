@@ -119,9 +119,26 @@ ModeError <- cbind(ModeError, year)
 # merge into combined data frame
 ModeCombined <- merge(ModeShare, ModeError)
 
-#create variables for minimum and maximum for each variable
-ModeCombined$MVmin <- ModeCombined$ - ModeCombined$`SE Bicycle`
-ModeCombined$MVmax <- ModeCombined$`( Bicycle / Total )` + ModeCombined$`SE Bicycle`
+#create variables for upper abd lower bounds of confidence intervals for each mode share variable
+ModeCombined$MVmin <- ModeCombined$`Motor vehicle` - ModeCombined$`SE Motor Vehicle`
+ModeCombined$MVmax <- ModeCombined$`Motor vehicle` + ModeCombined$`SE Motor Vehicle`
+
+ModeCombined$DrvAlnmin <- ModeCombined$`Drove alone` - ModeCombined$`SE Drove alone`
+ModeCombined$DrvAlnmax <- ModeCombined$`Drove alone` + ModeCombined$`SE Drove alone`
+
+ModeCombined$PTmin <- ModeCombined$Transit - ModeCombined$`SE Transit`
+ModeCombined$PTmax <- ModeCombined$Transit + ModeCombined$`SE Transit`
+
+ModeCombined$Bikemin <- ModeCombined$`Bicycle` - ModeCombined$`SE Bicycle`
+ModeCombined$Bikemax <- ModeCombined$`Bicycle` + ModeCombined$`SE Bicycle`
+
+ModeCombined$Walkmin <- ModeCombined$Walked - ModeCombined$`SE Walked`
+ModeCombined$Walkmax <- ModeCombined$Walked + ModeCombined$`SE Walked`
+
+ModeCombined$Homemin <- ModeCombined$`Worked from home` - ModeCombined$`SE Worked from home`
+ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worked from home`
+
+
 ##Now let's try plotting the bike mode share by year
 g <- plot(ModeShare$`( Bicycle / Total )` ~ ModeShare$year, type = "o", ylim = c(0,0.06))
 
