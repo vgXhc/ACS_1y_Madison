@@ -143,15 +143,15 @@ ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worke
 
 g <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
-                y = ModeCombined$Bicycle, 
-                color = "red")) + 
+                y = ModeCombined$Bicycle)) + 
             geom_point() + 
-            geom_line(color = "blue") +
-            theme_classic() +
+            geom_line() +
+            theme_bw() +
             xlab("Year") +
             ylab("Percent biking to work") +
-            scale_x_continuous(breaks = c(2006:2017)) +
+            scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
             scale_y_continuous(labels = scales::percent, limits = c(0,0.08)) +
-            geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax))
+            #geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax)) +
+            geom_errorbar(aes(ymin =ModeCombined$Bikemin, ymax = ModeCombined$Bikemax))
 g
 
