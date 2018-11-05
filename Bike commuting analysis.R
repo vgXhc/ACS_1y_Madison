@@ -148,10 +148,41 @@ g <- ggplot(data = ModeCombined,
             geom_line() +
             theme_bw() +
             xlab("Year") +
-            ylab("Percent biking to work") +
+            ylab("Biking to work") +
             scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
             scale_y_continuous(labels = scales::percent, limits = c(0,0.08)) +
             #geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax)) +
             geom_errorbar(aes(ymin =ModeCombined$Bikemin, ymax = ModeCombined$Bikemax))
 g
+
+## plot for drive alone
+
+g <- ggplot(data = ModeCombined, 
+            aes(x = ModeCombined$year, 
+                y = ModeCombined$`Drove alone`)) + 
+  geom_point() + 
+  geom_line() +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Driving alone to work") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(labels = scales::percent, limits = c(0.5,0.8)) +
+  geom_errorbar(aes(ymin =ModeCombined$DrvAlnmin, ymax = ModeCombined$DrvAlnmax))
+g
+
+## plot for public transit
+g <- ggplot(data = ModeCombined, 
+            aes(x = ModeCombined$year, 
+                y = ModeCombined$Transit)) + 
+  geom_point() + 
+  geom_line() +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Public transit to work") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(labels = scales::percent, limits = c(0.05,0.15)) +
+  geom_errorbar(aes(ymin =ModeCombined$PTmin, ymax = ModeCombined$PTmax))
+g
+
+
 
