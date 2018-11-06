@@ -1,5 +1,8 @@
 library(acs)
 library(ggplot2)
+library(reshape2)
+
+
 
 ## install API key
 APIKEY <- api.key.install("7dbf424d492b694ca9de38c3c2b90867d55086be")
@@ -137,6 +140,19 @@ ModeCombined$Walkmax <- ModeCombined$Walked + ModeCombined$`SE Walked`
 
 ModeCombined$Homemin <- ModeCombined$`Worked from home` - ModeCombined$`SE Worked from home`
 ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worked from home`
+
+# I'm trying to melt the data in ModeCombined to get from a wide to a long format
+
+ModeCombined_long <- melt(ModeCombined, 
+                          id = "year", 
+                          measure.vars = c("Motor vehicle", "Bicycle", "Transit", "Worked from home", "Walked"))
+
+ggplot(data=ModeCombined_long,
+       aes(x=year, y=value, colour=variable)) +
+  geom_line(aes(size=2)) +
+  xlab("Year") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
+  scale_y_continuous(labels = scales::percent, limits = c(0,0.8))
 
 
 ##Now let's try plotting the bike mode share by year
