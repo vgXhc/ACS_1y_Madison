@@ -149,10 +149,17 @@ ModeCombined_long <- melt(ModeCombined,
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
-  geom_line(aes(size=2)) +
+  geom_line() +
   xlab("Year") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
   scale_y_continuous(labels = scales::percent, limits = c(0,0.8))
+
+ggplot() +
+  geom_area(data = ModeCombined_long, aes(x= year, y = value, fill = variable)) +
+  ylab("Mode share") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2)))
+
 
 
 ##Now let's try plotting the bike mode share by year
@@ -162,7 +169,7 @@ g <- ggplot(data = ModeCombined,
                 y = ModeCombined$Bicycle)) + 
             geom_point() + 
             geom_line() +
-            theme_bw() +
+            ggtitle("Biking") +
             xlab("Year") +
             ylab("Biking to work") +
             scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
@@ -178,7 +185,6 @@ g <- ggplot(data = ModeCombined,
                 y = ModeCombined$`Drove alone`)) + 
   geom_point() + 
   geom_line() +
-  theme_bw() +
   xlab("Year") +
   ylab("Driving alone to work") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
@@ -186,13 +192,27 @@ g <- ggplot(data = ModeCombined,
   geom_errorbar(aes(ymin =ModeCombined$DrvAlnmin, ymax = ModeCombined$DrvAlnmax))
 g
 
+## plot for motor vehicle
+
+g <- ggplot(data = ModeCombined, 
+            aes(x = ModeCombined$year, 
+                y = ModeCombined$`Motor vehicle`)) + 
+  geom_point() + 
+  geom_line() +
+  xlab("Year") +
+  ylab("Driving to work") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(labels = scales::percent, limits = c(0,0.8)) +
+  geom_errorbar(aes(ymin =ModeCombined$MVmin, ymax = ModeCombined$MVmax))
+g
+
+
 ## plot for public transit
 g <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
                 y = ModeCombined$Transit)) + 
   geom_point() + 
   geom_line() +
-  theme_bw() +
   xlab("Year") +
   ylab("Public transit to work") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
