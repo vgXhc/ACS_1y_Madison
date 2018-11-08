@@ -166,10 +166,11 @@ ModeCombined_long <- melt(ModeCombined,
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
+  geom_point() +
   geom_line() +
   xlab("Year") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
-  scale_y_continuous(labels = scales::percent, limits = c(0,0.8))
+  scale_y_continuous(labels = scales::percent)
 
 ggplot() +
   geom_area(data = ModeCombined_long, aes(x= year, y = value, fill = variable)) +
@@ -242,7 +243,7 @@ PTPlot <- ggplot(data = ModeCombined,
 ## plot for walking
 walkPlot <- ggplot(data = ModeCombined, 
                  aes(x = ModeCombined$year, 
-                     y = ModeCombined$Walked)) + 
+                     y = ModeCombined$Walked, color = "red")) + 
   geom_point() + 
   geom_line() +
   ggtitle("Walk") +
