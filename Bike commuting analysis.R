@@ -1,7 +1,14 @@
 library(acs)
 library(ggplot2)
 library(reshape2)
+library(gridExtra)
 
+
+######################
+######################
+## Data prep        ## 
+######################
+######################
 
 
 ## install API key
@@ -141,11 +148,21 @@ ModeCombined$Walkmax <- ModeCombined$Walked + ModeCombined$`SE Walked`
 ModeCombined$Homemin <- ModeCombined$`Worked from home` - ModeCombined$`SE Worked from home`
 ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worked from home`
 
-# I'm trying to melt the data in ModeCombined to get from a wide to a long format
+# melt the data in ModeCombined to get from a wide to a long format
 
 ModeCombined_long <- melt(ModeCombined, 
                           id = "year", 
                           measure.vars = c("Motor vehicle", "Bicycle", "Transit", "Worked from home", "Walked"))
+
+
+
+
+######################
+######################
+## Data plots       ## 
+######################
+######################
+
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
@@ -164,61 +181,89 @@ ggplot() +
 
 ##Now let's try plotting the bike mode share by year
 
-g <- ggplot(data = ModeCombined, 
+bikePlot <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
                 y = ModeCombined$Bicycle)) + 
             geom_point() + 
             geom_line() +
-            ggtitle("Biking") +
+            ggtitle("Bike") +
             xlab("Year") +
             ylab("Biking to work") +
             scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
-            scale_y_continuous(labels = scales::percent, limits = c(0,0.08)) +
+            scale_y_continuous(labels = scales::percent) +
             #geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax)) +
             geom_errorbar(aes(ymin =ModeCombined$Bikemin, ymax = ModeCombined$Bikemax))
-g
+
 
 ## plot for drive alone
 
-g <- ggplot(data = ModeCombined, 
+drvAlnPlot <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
                 y = ModeCombined$`Drove alone`)) + 
   geom_point() + 
   geom_line() +
+  ggtitle("Drive alone") +
   xlab("Year") +
   ylab("Driving alone to work") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
-  scale_y_continuous(labels = scales::percent, limits = c(0.5,0.8)) +
+  scale_y_continuous(labels = scales::percent) +
   geom_errorbar(aes(ymin =ModeCombined$DrvAlnmin, ymax = ModeCombined$DrvAlnmax))
-g
+
 
 ## plot for motor vehicle
 
-g <- ggplot(data = ModeCombined, 
+MVPlot <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
                 y = ModeCombined$`Motor vehicle`)) + 
   geom_point() + 
   geom_line() +
+  ggtitle("Motor vehicle") +
   xlab("Year") +
   ylab("Driving to work") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
-  scale_y_continuous(labels = scales::percent, limits = c(0,0.8)) +
+  scale_y_continuous(labels = scales::percent) +
   geom_errorbar(aes(ymin =ModeCombined$MVmin, ymax = ModeCombined$MVmax))
-g
+
 
 
 ## plot for public transit
-g <- ggplot(data = ModeCombined, 
+PTPlot <- ggplot(data = ModeCombined, 
             aes(x = ModeCombined$year, 
                 y = ModeCombined$Transit)) + 
   geom_point() + 
   geom_line() +
+  ggtitle("Public transit") +
   xlab("Year") +
   ylab("Public transit to work") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
-  scale_y_continuous(labels = scales::percent, limits = c(0.05,0.15)) +
+  scale_y_continuous(labels = scales::percent) +
   geom_errorbar(aes(ymin =ModeCombined$PTmin, ymax = ModeCombined$PTmax))
-g
 
+## plot for walking
+walkPlot <- ggplot(data = ModeCombined, 
+                 aes(x = ModeCombined$year, 
+                     y = ModeCombined$Walked)) + 
+  geom_point() + 
+  geom_line() +
+  ggtitle("Walk") +
+  xlab("Year") +
+  ylab("Walked to work") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(labels = scales::percent) +
+  geom_errorbar(aes(ymin =ModeCombined$Walkmin , ymax = ModeCombined$Walkmax))
 
+## plot for work from home
+homePlot <- ggplot(data = ModeCombined, 
+                   aes(x = ModeCombined$year, 
+                       y = ModeCombined$`Worked from home`)) + 
+  geom_point() + 
+  geom_line() +
+  ggtitle("Work from home") +
+  xlab("Year") +
+  ylab("Worked from home") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(labels = scales::percent) +
+  geom_errorbar(aes(ymin =ModeCombined$Homemin , ymax = ModeCombined$Homemax))
 
+# create multi-panel plot
+grid.arrange(bikePlot, MVPlot, PTPlot, walkPlot, drvAlnPlot, homePlot, nrow = 2, top = "Commute Mode Share in Madison, 2016-2017")
