@@ -37,6 +37,22 @@ ACSData2007 <- read.acs("data/ACS_07_1YR_B08006_with_ann.csv", endyear = 07, spa
 ACSData2006 <- read.acs("data/ACS_06_EST_B08006_with_ann.csv", endyear = 06, span = 1)
 
 
+#create a data frame with just the motor vehicle and total numbers by year
+MVnumbers <- rbind(ACSData2006@estimate[1:2],
+                   ACSData2007@estimate[1:2],
+                   ACSData2008@estimate[1:2],
+                   ACSData2009@estimate[1:2],
+                   ACSData2010@estimate[1:2],
+                   ACSData2011@estimate[1:2],
+                   ACSData2012@estimate[1:2],
+                   ACSData2013@estimate[1:2],
+                   ACSData2014@estimate[1:2],
+                   ACSData2015@estimate[1:2],
+                   ACSData2016@estimate[1:2],
+                   ACSData2017@estimate[1:2])
+
+
+
 ## To get percentages with the correct margins of error, 
 ## you have to use this complicated method; calculating percentages for motor vehicle, drive alone,
 ## public transit, bicycle, walked, worked at home
@@ -115,16 +131,21 @@ ModeError <- rbind(ModeSharePercent2017@standard.error,
 colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicycle", "Walked", "Worked from home")
 colnames(ModeError) <- c("SE Motor Vehicle", "SE Drove alone", "SE Transit", "SE Bicycle", "SE Walked", "SE Worked from home")
 
+# change column names for motor vehicle
+colnames(MVnumbers) <- c("Total commuters", "Motor vehicle")
+
 ## convert into a data frame
 
 ModeShare <- as.data.frame(ModeShare)
 ModeError <- as.data.frame(ModeError)
+MVnumbers <- as.data.frame(MVnumbers)
 
 ##create a new variable for year, starting at 2017 and counting down to 2006
 year <- c(seq(2006, 2017, by=1))
 ## add a column for the year variable
 ModeShare <- cbind(ModeShare, year)
 ModeError <- cbind(ModeError, year)
+MVnumbers <- cbind(MVnumbers, year)
 
 # merge into combined data frame
 ModeCombined <- merge(ModeShare, ModeError)
@@ -155,7 +176,11 @@ ModeCombined_long <- melt(ModeCombined,
                           measure.vars = c("Motor vehicle", "Bicycle", "Transit", "Worked from home", "Walked"))
 
 
+# also melt data in MVnumbers
 
+MVnumbers_long <- melt(MVnumbers,
+                       id = "year",
+                       measure.vars = c("Total commuters", "Motor vehicle"))
 
 ######################
 ######################
@@ -163,6 +188,13 @@ ModeCombined_long <- melt(ModeCombined,
 ######################
 ######################
 
+
+ggplot(MVnumbers_long, aes(x = year, y = value, color = variable)) +
+  xlab("Year") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
+  scale_y_continuous(limits = c(0,150000)) +
+  geom_point() +
+  geom_smooth()
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
@@ -186,7 +218,6 @@ bikePlot <- ggplot(data = ModeCombined,
             aes(x = ModeCombined$year, 
                 y = ModeCombined$Bicycle)) + 
             geom_point() + 
-            geom_line() +
             ggtitle("Bike") +
             xlab("Year") +
             ylab("Biking to work") +

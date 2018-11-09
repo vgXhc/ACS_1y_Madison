@@ -38,6 +38,7 @@ Compare that to the wealth of data we have about roads and motor vehicles: <http
 ### Total number of commuters
 Since 2006, the number of commuters in Madison has grown a lot. Whereas in 2006 there were a little over 120,000 commuters, that number had grown to almost 150,000 in 2017. This is an increase by   
 
+
 ### Biking
 ### Driving
 #### Drive alone
