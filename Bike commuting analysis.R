@@ -15,7 +15,7 @@ Madison <- geo.make(state="WI", place = 48000)
 ## select only the total, car/truck/van, public transport, bicycle, walked, worked at home variable from table B08006
 TransitVars <- acs.lookup(2017, span = 1, table.number = "B08006", dataset = "acs")[c(1,2,8,14,15,17)]
 
-# read data from files downloaded from FactFinder
+# read one-year data from files downloaded from FactFinder
 ACSData2017 <- read.acs("data/ACS_17_1YR_B08006_with_ann.csv", endyear = 17, span = 1)
 ACSData2016 <- read.acs("data/ACS_16_1YR_B08006_with_ann.csv", endyear = 16, span = 1)
 ACSData2015 <- read.acs("data/ACS_15_1YR_B08006_with_ann.csv", endyear = 15, span = 1)
@@ -28,6 +28,7 @@ ACSData2009 <- read.acs("data/ACS_09_1YR_B08006_with_ann.csv", endyear = 09, spa
 ACSData2008 <- read.acs("data/ACS_08_1YR_B08006_with_ann.csv", endyear = 08, span = 1)
 ACSData2007 <- read.acs("data/ACS_07_1YR_B08006_with_ann.csv", endyear = 07, span = 1)
 ACSData2006 <- read.acs("data/ACS_06_EST_B08006_with_ann.csv", endyear = 06, span = 1)
+
 
 
 ## To get percentages with the correct margins of error, 
@@ -149,7 +150,7 @@ ModeCombined_long <- melt(ModeCombined,
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
-  geom_line(aes(size=2)) +
+  geom_line(size=1.5) +
   xlab("Year") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
   scale_y_continuous(labels = scales::percent, limits = c(0,0.8))
