@@ -22,6 +22,7 @@ Madison <- geo.make(state="WI", place = 48000)
 ## select only the total, car/truck/van, public transport, bicycle, walked, worked at home variable from table B08006
 TransitVars <- acs.lookup(2017, span = 1, table.number = "B08006", dataset = "acs")[c(1,2,8,14,15,17)]
 
+
 # read data from files downloaded from FactFinder
 ACSData2017 <- read.acs("data/ACS_17_1YR_B08006_with_ann.csv", endyear = 17, span = 1)
 ACSData2016 <- read.acs("data/ACS_16_1YR_B08006_with_ann.csv", endyear = 16, span = 1)
@@ -56,43 +57,137 @@ MVnumbers <- rbind(ACSData2006@estimate[1:2],
 ## To get percentages with the correct margins of error, 
 ## you have to use this complicated method; calculating percentages for motor vehicle, drive alone,
 ## public transit, bicycle, walked, worked at home
+## Also adding data for male/female 
+# Relevant variables: 
+# Male:
+# - Total: 18
+# - MV: 19
+# - DrvAln: 20
+# - Bike: 31
+# Female:
+# - Total: 35
+# - MV: 37
+# - DrvAln: 37
+# - Bike: 48
+VariableList <- c(2,3,8,14,15,17)
 
-ModeSharePercent2017 <- apply(ACSData2017[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2017 <- apply(ACSData2017[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2017[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2016 <- apply(ACSData2016[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2016 <- apply(ACSData2016[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2016[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2015 <- apply(ACSData2015[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2015 <- apply(ACSData2015[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2015[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2014 <- apply(ACSData2014[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2014 <- apply(ACSData2014[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2014[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2013 <- apply(ACSData2013[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2013 <- apply(ACSData2013[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2013[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2012 <- apply(ACSData2012[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2012 <- apply(ACSData2012[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2012[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2011 <- apply(ACSData2011[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2011 <- apply(ACSData2011[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2011[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2010 <- apply(ACSData2010[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2010 <- apply(ACSData2010[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2010[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2009 <- apply(ACSData2009[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2009 <- apply(ACSData2009[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2009[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2008 <- apply(ACSData2008[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2008 <- apply(ACSData2008[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2008[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2007 <- apply(ACSData2007[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2007 <- apply(ACSData2007[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2007[,1], method="proportion",
                               verbose=F)
-ModeSharePercent2006 <- apply(ACSData2006[,c(2,3,8,14,15,17)], MARGIN=1, FUN=divide.acs,
+ModeSharePercent2006 <- apply(ACSData2006[,VariableList], MARGIN=1, FUN=divide.acs,
                               denominator=ACSData2006[,1], method="proportion",
                               verbose=F)
+
+# Proportions for male and female
+# These have to be calculcated separately as they have a different denominator each
+VariableList <- c(19,20,31)
+
+
+MaleModeSharePercent2017 <- apply(ACSData2017[,VariableList], MARGIN=1, FUN=divide.acs,
+                                       denominator=ACSData2017[,18], method="proportion",
+                                       verbose=F)
+MaleModeSharePercent2016 <- apply(ACSData2016[,VariableList], MARGIN=1, FUN=divide.acs,
+                                       denominator=ACSData2016[,18], method="proportion",
+                                       verbose=F)
+MaleModeSharePercent2015 <- apply(ACSData2015[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2015[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2014 <- apply(ACSData2014[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2014[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2013 <- apply(ACSData2013[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2013[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2012 <- apply(ACSData2012[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2012[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2011 <- apply(ACSData2011[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2011[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2010 <- apply(ACSData2010[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2010[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2009 <- apply(ACSData2009[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2009[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2008 <- apply(ACSData2008[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2008[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2007 <- apply(ACSData2007[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2007[,18], method="proportion",
+                                  verbose=F)
+MaleModeSharePercent2006 <- apply(ACSData2006[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2006[,18], method="proportion",
+                                  verbose=F)
+
+VariableList <- c(36,37,48)
+FemaleModeSharePercent2017 <- apply(ACSData2017[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2017[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2016 <- apply(ACSData2016[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2016[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2015 <- apply(ACSData2015[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2015[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2014 <- apply(ACSData2014[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2014[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2013 <- apply(ACSData2013[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2013[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2012 <- apply(ACSData2012[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2012[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2011 <- apply(ACSData2011[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2011[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2010 <- apply(ACSData2010[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2010[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2009 <- apply(ACSData2009[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2009[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2008 <- apply(ACSData2008[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2008[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2007 <- apply(ACSData2007[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2007[,35], method="proportion",
+                                  verbose=F)
+FemaleModeSharePercent2006 <- apply(ACSData2006[,VariableList], MARGIN=1, FUN=divide.acs,
+                                  denominator=ACSData2006[,35], method="proportion",
+                                  verbose=F)
+
 ## You can access things in the acs objects with the @ operator
 ## Let's construct a new variable that contains the years as rows and just bike mode
 ## mode share for now
@@ -101,6 +196,9 @@ ModeSharePercent2006 <- apply(ACSData2006[,c(2,3,8,14,15,17)], MARGIN=1, FUN=div
 
 ## first we extract vectors with just the mode share numbers for each year
 ## this produces vectors with numeric data. Use rbind to combine them
+
+
+
 ModeShare <- rbind(ModeSharePercent2017@estimate,
                    ModeSharePercent2016@estimate,
                    ModeSharePercent2015@estimate,
@@ -113,6 +211,33 @@ ModeShare <- rbind(ModeSharePercent2017@estimate,
                    ModeSharePercent2008@estimate,
                    ModeSharePercent2007@estimate,
                    ModeSharePercent2006@estimate)
+
+FemaleModeShare <- rbind(FemaleModeSharePercent2017@estimate,
+                         FemaleModeSharePercent2016@estimate,
+                         FemaleModeSharePercent2015@estimate,
+                         FemaleModeSharePercent2014@estimate,
+                         FemaleModeSharePercent2013@estimate,
+                         FemaleModeSharePercent2012@estimate,
+                         FemaleModeSharePercent2011@estimate,
+                         FemaleModeSharePercent2010@estimate,
+                         FemaleModeSharePercent2009@estimate,
+                         FemaleModeSharePercent2008@estimate,
+                         FemaleModeSharePercent2007@estimate,
+                         FemaleModeSharePercent2006@estimate)
+
+
+MaleModeShare <- rbind(MaleModeSharePercent2017@estimate,
+                       MaleModeSharePercent2016@estimate,
+                       MaleModeSharePercent2015@estimate,
+                       MaleModeSharePercent2014@estimate,
+                       MaleModeSharePercent2013@estimate,
+                       MaleModeSharePercent2012@estimate,
+                       MaleModeSharePercent2011@estimate,
+                       MaleModeSharePercent2010@estimate,
+                       MaleModeSharePercent2009@estimate,
+                       MaleModeSharePercent2008@estimate,
+                       MaleModeSharePercent2007@estimate,
+                       MaleModeSharePercent2006@estimate)
 
 ModeError <- rbind(ModeSharePercent2017@standard.error,
                    ModeSharePercent2016@standard.error,
@@ -127,9 +252,40 @@ ModeError <- rbind(ModeSharePercent2017@standard.error,
                    ModeSharePercent2007@standard.error,
                    ModeSharePercent2006@standard.error)
 
+MaleModeError <- rbind(MaleModeSharePercent2017@standard.error,
+                   MaleModeSharePercent2016@standard.error,
+                   MaleModeSharePercent2015@standard.error,
+                   MaleModeSharePercent2014@standard.error,
+                   MaleModeSharePercent2013@standard.error,
+                   MaleModeSharePercent2012@standard.error,
+                   MaleModeSharePercent2011@standard.error,
+                   MaleModeSharePercent2010@standard.error,
+                   MaleModeSharePercent2009@standard.error,
+                   MaleModeSharePercent2008@standard.error,
+                   MaleModeSharePercent2007@standard.error,
+                   MaleModeSharePercent2006@standard.error)
+
+FemaleModeError <- rbind(FemaleModeSharePercent2017@standard.error,
+                   FemaleModeSharePercent2016@standard.error,
+                   FemaleModeSharePercent2015@standard.error,
+                   FemaleModeSharePercent2014@standard.error,
+                   FemaleModeSharePercent2013@standard.error,
+                   FemaleModeSharePercent2012@standard.error,
+                   FemaleModeSharePercent2011@standard.error,
+                   FemaleModeSharePercent2010@standard.error,
+                   FemaleModeSharePercent2009@standard.error,
+                   FemaleModeSharePercent2008@standard.error,
+                   FemaleModeSharePercent2007@standard.error,
+                   FemaleModeSharePercent2006@standard.error)
+
+
 # change names for variable in both ModeShare and ModeError
 colnames(ModeShare) <- c("Motor vehicle", "Drove alone", "Transit", "Bicycle", "Walked", "Worked from home")
 colnames(ModeError) <- c("SE Motor Vehicle", "SE Drove alone", "SE Transit", "SE Bicycle", "SE Walked", "SE Worked from home")
+colnames(MaleModeShare) <- c("Motor vehicle (men)", "Drove Alone (men)", "Bicycle (men)")
+colnames(FemaleModeShare) <- c("Motor vehicle (women)", "Drove Alone (women)", "Bicycle (women)")
+colnames(MaleModeError) <- c("SE Motor Vehicle (men)", "SE Drove Alone (men)", "SE Bicycle (men)")
+colnames(FemaleModeError) <- c("SE Motor Vehicle (women)", "SE Drove Alone (women)", "SE Bicycle (women)")
 
 # change column names for motor vehicle
 colnames(MVnumbers) <- c("Total commuters", "Motor vehicle")
@@ -139,6 +295,10 @@ colnames(MVnumbers) <- c("Total commuters", "Motor vehicle")
 ModeShare <- as.data.frame(ModeShare)
 ModeError <- as.data.frame(ModeError)
 MVnumbers <- as.data.frame(MVnumbers)
+FemaleModeError <- as.data.frame(FemaleModeError)
+FemaleModeShare <- as.data.frame(FemaleModeShare)
+MaleModeError <- as.data.frame(MaleModeError)
+MaleModeShare <- as.data.frame(MaleModeShare)
 
 ##create a new variable for year, starting at 2017 and counting down to 2006
 year <- c(seq(2006, 2017, by=1))
@@ -146,9 +306,20 @@ year <- c(seq(2006, 2017, by=1))
 ModeShare <- cbind(ModeShare, year)
 ModeError <- cbind(ModeError, year)
 MVnumbers <- cbind(MVnumbers, year)
+FemaleModeError <- cbind(FemaleModeError, year)
+FemaleModeShare <- cbind(FemaleModeShare, year)
+MaleModeError <- cbind(MaleModeError, year)
+MaleModeShare <- cbind(MaleModeShare, year)
+
+
 
 # merge into combined data frame
 ModeCombined <- merge(ModeShare, ModeError)
+
+FemaleModeCombined <- merge(FemaleModeError, FemaleModeShare)
+MaleModeCombined <- merge(MaleModeError, MaleModeShare)
+GenderModeCombined <- merge(MaleModeCombined, FemaleModeCombined)
+
 
 #create variables for upper abd lower bounds of confidence intervals for each mode share variable
 ModeCombined$MVmin <- ModeCombined$`Motor vehicle` - ModeCombined$`SE Motor Vehicle`
@@ -169,6 +340,12 @@ ModeCombined$Walkmax <- ModeCombined$Walked + ModeCombined$`SE Walked`
 ModeCombined$Homemin <- ModeCombined$`Worked from home` - ModeCombined$`SE Worked from home`
 ModeCombined$Homemax <- ModeCombined$`Worked from home` + ModeCombined$`SE Worked from home`
 
+GenderModeCombined$BicycleMmax <- GenderModeCombined$`Bicycle (men)` + GenderModeCombined$`SE Bicycle (men)`
+GenderModeCombined$BicycleMmin <- GenderModeCombined$`Bicycle (men)` - GenderModeCombined$`SE Bicycle (men)`
+GenderModeCombined$BicycleFmax <- GenderModeCombined$`Bicycle (women)` + GenderModeCombined$`SE Bicycle (women)`
+GenderModeCombined$BicycleFmin <- GenderModeCombined$`Bicycle (women)` + GenderModeCombined$`SE Bicycle (women)`
+
+
 # melt the data in ModeCombined to get from a wide to a long format
 
 ModeCombined_long <- melt(ModeCombined, 
@@ -181,6 +358,24 @@ ModeCombined_long <- melt(ModeCombined,
 MVnumbers_long <- melt(MVnumbers,
                        id = "year",
                        measure.vars = c("Total commuters", "Motor vehicle"))
+
+
+
+# melt gender data
+
+GenderModeCombined_long <- melt(GenderModeCombined,
+                                id = "year",
+                                measure.vars = c("Bicycle (men)",
+                                                 "Bicycle (women)"))
+
+GenderErrorCombined_long <- melt(GenderModeCombined,
+                                id = "year",
+                                measure.vars = c("BicycleMmax",
+                                                 "BicycleMmin",
+                                                 "BicycleFmax",
+                                                 "BicycleFmin"))
+
+
 
 ######################
 ######################
@@ -195,6 +390,16 @@ ggplot(MVnumbers_long, aes(x = year, y = value, color = variable)) +
   scale_y_continuous(limits = c(0,150000)) +
   geom_point() +
   geom_smooth()
+
+
+
+ggplot(data=GenderModeCombined_long,
+       aes(x=year, y=value, colour=variable)) +
+  geom_point() +
+  geom_line() +
+  xlab("Year") +
+  scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
+  scale_y_continuous(labels = scales::percent, limits = c(0,0.1))
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
@@ -224,7 +429,7 @@ bikePlot <- ggplot(data = ModeCombined,
             scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) +
             scale_y_continuous(labels = scales::percent) +
             #geom_linerange(aes(ymin = ModeCombined$Bikemin , ymax = ModeCombined$Bikemax)) +
-            geom_errorbar(aes(ymin =ModeCombined$Bikemin, ymax = ModeCombined$Bikemax))
+            geom_errorbar(aes(ymin = ModeCombined$Bikemin, ymax = ModeCombined$Bikemax))
 
 
 ## plot for drive alone
@@ -274,7 +479,7 @@ PTPlot <- ggplot(data = ModeCombined,
 ## plot for walking
 walkPlot <- ggplot(data = ModeCombined, 
                  aes(x = ModeCombined$year, 
-                     y = ModeCombined$Walked, color = "red")) + 
+                     y = ModeCombined$Walked)) + 
   geom_point() + 
   geom_line() +
   ggtitle("Walk") +
