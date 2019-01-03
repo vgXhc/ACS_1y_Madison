@@ -2,7 +2,7 @@ library(acs)
 library(ggplot2)
 library(reshape2)
 library(gridExtra)
-
+library(tidyverse)
 
 ######################
 ######################
@@ -366,7 +366,11 @@ MVnumbers_long <- melt(MVnumbers,
 GenderModeCombined_long <- melt(GenderModeCombined,
                                 id = "year",
                                 measure.vars = c("Bicycle (men)",
-                                                 "Bicycle (women)"))
+                                                 "Bicycle (women)",
+                                                 "BicycleMmax",
+                                                 "BicycleMmin",
+                                                 "BicycleFmax",
+                                                 "BicycleFmin"))
 
 GenderErrorCombined_long <- melt(GenderModeCombined,
                                 id = "year",
@@ -392,14 +396,20 @@ ggplot(MVnumbers_long, aes(x = year, y = value, color = variable)) +
   geom_smooth()
 
 
+plotdata <- filter(GenderModeCombined_long, variable %in% c("Bicycle (men)", "Bicycle (women)"))
+errordataMmax <- filter(GenderModeCombined_long, variable %in% c("BicycleMmax"))
+errordataMmin <- filter(GenderModeCombined_long, variable %in% c("BicycleMmin"))
 
-ggplot(data=GenderModeCombined_long,
+
+ggplot(data=plotdata,
        aes(x=year, y=value, colour=variable)) +
   geom_point() +
   geom_line() +
   xlab("Year") +
   scale_x_continuous(breaks = c(seq(from = 2006, to = 2017, by = 2))) + 
-  scale_y_continuous(labels = scales::percent, limits = c(0,0.1))
+  scale_y_continuous(labels = scales::percent, limits = c(0,0.15)) +
+  geom_errorbar(data = errordataMmax, aes(ymax = value, ymin = value)) +
+  geom_errorbar(data = errordataMmin, aes(ymax = value, ymin = value))
 
 ggplot(data=ModeCombined_long,
        aes(x=year, y=value, colour=variable)) +
@@ -423,6 +433,7 @@ bikePlot <- ggplot(data = ModeCombined,
             aes(x = ModeCombined$year, 
                 y = ModeCombined$Bicycle)) + 
             geom_point() + 
+            geom_line() +
             ggtitle("Bike") +
             xlab("Year") +
             ylab("Biking to work") +
@@ -503,4 +514,4 @@ homePlot <- ggplot(data = ModeCombined,
   geom_errorbar(aes(ymin =ModeCombined$Homemin , ymax = ModeCombined$Homemax))
 
 # create multi-panel plot
-grid.arrange(bikePlot, MVPlot, PTPlot, walkPlot, drvAlnPlot, homePlot, nrow = 2, top = "Commute Mode Share in Madison, 2016-2017")
+grid.arrange(bikePlot, MVPlot, PTPlot, walkPlot, drvAlnPlot, homePlot, nrow = 2, top = "Commute Mode Share in Madison, 2006-2017")
