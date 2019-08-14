@@ -301,7 +301,7 @@ MaleModeError <- as.data.frame(MaleModeError)
 MaleModeShare <- as.data.frame(MaleModeShare)
 
 ##create a new variable for year, starting at 2017 and counting down to 2006
-year <- c(seq(2006, 2017, by=1))
+year <- c(seq(2017, 2006, by=-1))
 ## add a column for the year variable
 ModeShare <- cbind(ModeShare, year)
 ModeError <- cbind(ModeError, year)
