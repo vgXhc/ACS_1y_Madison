@@ -1,0 +1,176 @@
+---
+title: "Bike commute share in Madison over time"
+author: "Harald Kliems"
+date: "9/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+```{r}
+library(tidycensus)
+library(tidyverse)
+library(purrr)
+```
+
+
+## Get data from 1-year Subject tables
+Table `S0801` contains the information on commute mode share. Variable `S0801_C01_011` is the percent of bike mode share. Data from the API is available starting at 2011.
+
+```{r}
+#define years
+year <- c(2011:2019)
+
+#use map function to retrieve data for all years
+wis <- map_df(year, function(x){
+  get_acs(geography = "place", table = "S0801", state = "WI", year = x, survey = "acs1", moe_level = 95, cache_table = T) %>% 
+    mutate(year = x)
+  })
+```
+The code above downloads the data for the "place" geometry, and we filter out Madison. ACS 1-year estimates also have sizable error margins, and we add upper and lower bounds of the estimates as new variables for visualization.
+```{r}
+madison <- wis %>% 
+  filter(NAME == "Madison city, Wisconsin") %>% 
+  mutate(max_est = estimate + moe, min_est = estimate - moe)
+```
+
+Now we can create a plot for the bike mode share over time.
+```{r}
+library(hrbrthemes)
+my_theme <- function() {
+    require(grid)
+    theme_ipsum() %+replace%
+        theme(panel.grid.minor.x = element_blank(),
+              panel.grid.major.x = element_blank(),
+              legend.title = element_blank()
+              )
+}
+
+
+#filter to bike mode share only and plot with error bars
+madison %>% 
+  filter(variable == "S0801_C01_011") %>% 
+  ggplot(aes(x = year, y = estimate)) +
+  geom_line() +
+  geom_point() +
+  geom_line(aes(y = max_est), linetype = 2, alpha = .7) +
+  geom_line(aes(y = min_est), linetype = 2, alpha = .7) +
+  geom_line(size = 1.2) +
+  scale_x_continuous(breaks = seq(2011, 2019, 2)) +
+  labs(title = "Madisonians biking to work, 2011-2019",
+       x = "Year",
+       y = "Bike mode share %",
+       caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes"
+       ) +
+  my_theme()
+  #geom_errorbar(aes(ymin = min_est, ymax = max_est))
+```
+
+We can see what looks like a slow downward trend, but not the large uncertainty around the estimates. Let's add some other cities for comparison. Let's pick some cities that are either comparable in population, climate, or their rating in the Places for Bikes City Rating: Minneapolis, Arlington, Portland, Boulder, Pittsburgh, Fort Collins, Brooklyn, Ann Arbor, Chicago, Milwaukee.
+
+```{r}
+states <- c("MN", "WI", "CO", "VA", "PA", "OR", "MI", "IL")
+cities <- c("Minneapolis city, Minnesota", 
+            "Madison city, Wisconsin", 
+            #"Arlington CDP, Virginia", 
+            "Portland city, Oregon", 
+            #"Boulder city, Colorado", 
+            #"Pittsburgh city, Pennsylvania", 
+            "Fort Collins city, Colorado", 
+            "Ann Arbor city, Michigan", 
+            "Chicago city, Illinois", 
+            "Milwaukee city, Wisconsin")
+```
+```{r}
+states_df <- map_df(year, function(x){
+  get_acs(geography = "place", 
+          table = "S0801", 
+          state = states, 
+          year = x, 
+          survey = "acs1", 
+          moe_level = 95, 
+          cache_table = T) %>% 
+    mutate(year = x)
+})
+
+```
+Now let's do a pretty plot:
+
+```{r}
+library(gghighlight)
+bike_df <- states_df %>% 
+  filter(NAME %in% cities) %>% 
+  filter(variable == "S0801_C01_011") %>% 
+  mutate(short_name = gsub(" city.*", "", NAME))
+
+ 
+  ggplot(data = bike_df %>% group_by(short_name), aes(x = year, y = estimate, group = short_name)) +
+  geom_line() +
+  geom_point() +
+  geom_text(aes(label = short_name), 
+            data = bike_df %>% filter(year == 2019), 
+            nudge_x = .1,
+            check_overlap = T,
+            hjust = 0) +
+  gghighlight(short_name == "Madison",
+              unhighlighted_params = list(alpha = .7),
+              use_direct_label = F) +
+    scale_x_continuous(limits = c(2011, 2020), breaks = seq(2011, 2019, 1)) +
+    labs(title = "Bike commute mode share in select US cities, 2011-2019",
+         x = "Year",
+         y = "Bike commute mode share %",
+         caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes") +
+    my_theme()
+  
+```
+
+Madison is not alone: Other cities have also a flat or slightly downward trend. This raises the question: How are these people getting to work if not by bike? Let's compare the other modes in Madison.
+
+```{r}
+all_modes <- c("S0801_C01_002", #car truck van
+               "S0801_C01_009", #transit
+               "S0801_C01_010", #walk
+               "S0801_C01_011", #bike
+               "S0801_C01_013" #work from home
+               )
+
+madison_all_modes <- madison %>% 
+  filter(variable %in% all_modes) %>% 
+  mutate(trans_mode = case_when(variable == "S0801_C01_002" ~ "Drive", 
+                          variable == "S0801_C01_009" ~ "Transit",
+                          variable == "S0801_C01_010" ~ "Walk",
+                          variable == "S0801_C01_011" ~ "Bike",
+                          variable == "S0801_C01_013" ~ "Work from home"))
+```
+
+```{r}
+madison_all_modes %>% 
+  group_by(trans_mode) %>% 
+  ggplot(aes(year, estimate, color = trans_mode)) +
+  scale_color_viridis_d() +
+  geom_line(size = 1.2) +
+  scale_x_continuous(breaks = seq(2011, 2019, 2)) +
+  labs(title = "How Madisonians got to work, 2011-2019",
+         x = "Year",
+         y = "Commute mode share %",
+       caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes") +
+    my_theme()
+```
+```{r}
+
+library(waffle)
+
+madison_all_modes %>% 
+  ggplot(aes(fill = trans_mode, values = estimate)) +
+  geom_waffle(color = "white", n_rows = 10, flip = TRUE) +
+  facet_wrap(~year, nrow = 2, strip.position = "bottom") +
+  scale_color_viridis_d() +
+    scale_x_discrete() + 
+  scale_y_continuous(labels = function(x) x * 10, # make this multiplyer the same as n_rows
+                     expand = c(0,0))
+  
+```
+
