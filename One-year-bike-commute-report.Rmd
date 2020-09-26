@@ -1,44 +1,47 @@
 ---
-title: "Bike commute share in Madison over time"
+title: "Biking numbers in Madison: Not so great"
 author: "Harald Kliems"
 date: "9/23/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F, include = T, error = F, warning = F, cache = T, message = F)
 ```
 
-## Load libraries
-```{r}
+
+```{r load-libraries}
 library(tidycensus)
 library(tidyverse)
 library(purrr)
 ```
 
 
-## Get data from 1-year Subject tables
-Table `S0801` contains the information on commute mode share. Variable `S0801_C01_011` is the percent of bike mode share. Data from the API is available starting at 2011.
 
-```{r}
+
+```{r fetch-subject-table-data-madison}
 #define years
 year <- c(2011:2019)
 
 #use map function to retrieve data for all years
 wis <- map_df(year, function(x){
-  get_acs(geography = "place", table = "S0801", state = "WI", year = x, survey = "acs1", moe_level = 95, cache_table = T) %>% 
+  get_acs(geography = "place", 
+          table = "S0801", 
+          state = "WI", 
+          year = x, 
+          survey = "acs1", 
+          moe_level = 95, 
+          cache_table = T) %>% 
     mutate(year = x)
   })
 ```
-The code above downloads the data for the "place" geometry, and we filter out Madison. ACS 1-year estimates also have sizable error margins, and we add upper and lower bounds of the estimates as new variables for visualization.
-```{r}
+
+```{r filter-madison-add-moe}
 madison <- wis %>% 
   filter(NAME == "Madison city, Wisconsin") %>% 
   mutate(max_est = estimate + moe, min_est = estimate - moe)
 ```
-
-Now we can create a plot for the bike mode share over time.
-```{r}
+```{r define-plot-theme}
 library(hrbrthemes)
 my_theme <- function() {
     require(grid)
@@ -48,8 +51,12 @@ my_theme <- function() {
               legend.title = element_blank()
               )
 }
+```
+Once a year in September, the US Census Bureau publishes the latest annual data from the [American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs/). Included is information about how people commute to work. Transportation planners and advocates often rely on this data. Not so much because it is the one best data, but because we don't have a whole lot of other data about biking. This post will take deep dive into the commuting data for Madison over the past couple years.
 
+Let's start with bike commuting: What's the proportion of people biking to work in the City of Madison, and how has it changed over time?
 
+```{r plot-madison-bike-commute}
 #filter to bike mode share only and plot with error bars
 madison %>% 
   filter(variable == "S0801_C01_011") %>% 
@@ -66,12 +73,14 @@ madison %>%
        caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes"
        ) +
   my_theme()
-  #geom_errorbar(aes(ymin = min_est, ymax = max_est))
 ```
 
-We can see what looks like a slow downward trend, but not the large uncertainty around the estimates. Let's add some other cities for comparison. Let's pick some cities that are either comparable in population, climate, or their rating in the Places for Bikes City Rating: Minneapolis, Arlington, Portland, Boulder, Pittsburgh, Fort Collins, Brooklyn, Ann Arbor, Chicago, Milwaukee.
+We can see what looks like a slow downward trend, from around 5% in 2011 to 2016, to around 4% in the last few years. Note the dashed lines, though: These are the margins of error. Because the American Community Survey only send its survey to a sample of people (unlike the currently [ongoing 2020 Census](https://2020census.gov/en.html), which counts everyone), there is some of uncertainty in its numbers. What that means is that in 2019 the true number of people commuting could be as low as 2.7% or as high as 5.1%. And based on the data, it's possible that in 2012 -- the year with the apparent upward spike -- *fewer* people were commuting than in 2019. Again, this is among the best data we have available, but keep this uncertainty in mind when reading the rest of this post. And even in light of this uncertainty it is pretty safe to say: Bike commuting in Madison hasn't grown over the past nine years.
 
-```{r}
+Is Madison an exception? Let's add some other cities for comparison. We'll choose cities that are maybe comparable in population, climate, or their Places for Bikes City Rating: Minneapolis, Portland, Pittsburgh, Fort Collins, Brooklyn, Ann Arbor, Chicago, Milwaukee.
+
+
+```{r define-states-cities}
 states <- c("MN", "WI", "CO", "VA", "PA", "OR", "MI", "IL")
 cities <- c("Minneapolis city, Minnesota", 
             "Madison city, Wisconsin", 
@@ -84,7 +93,7 @@ cities <- c("Minneapolis city, Minnesota",
             "Chicago city, Illinois", 
             "Milwaukee city, Wisconsin")
 ```
-```{r}
+```{r get-data-states}
 states_df <- map_df(year, function(x){
   get_acs(geography = "place", 
           table = "S0801", 
@@ -97,9 +106,8 @@ states_df <- map_df(year, function(x){
 })
 
 ```
-Now let's do a pretty plot:
 
-```{r}
+```{r plot-city-comparison}
 library(gghighlight)
 bike_df <- states_df %>% 
   filter(NAME %in% cities) %>% 
@@ -127,9 +135,11 @@ bike_df <- states_df %>%
   
 ```
 
-Madison is not alone: Other cities have also a flat or slightly downward trend. This raises the question: How are these people getting to work if not by bike? Let's compare the other modes in Madison.
+It looks like Madison isn't that unique: Other cities, many of which have a high-for-the-US bike commute mode share, also have flat or slightly downward trends. 
 
-```{r}
+With bike commuting stagnating, how are other modes of transportation doing? Let's compare the other modes of commuting in Madison.
+
+```{r prepare-data-for-all-modes-madison}
 all_modes <- c("S0801_C01_002", #car truck van
                "S0801_C01_009", #transit
                "S0801_C01_010", #walk
@@ -146,8 +156,9 @@ madison_all_modes <- madison %>%
                           variable == "S0801_C01_013" ~ "Work from home"))
 ```
 
-```{r}
+```{r plot-all-modes-madison}
 madison_all_modes %>% 
+  mutate(trans_mode = fct_reorder(trans_mode, desc(estimate))) %>%
   group_by(trans_mode) %>% 
   ggplot(aes(year, estimate, color = trans_mode)) +
   scale_color_viridis_d() +
@@ -159,18 +170,115 @@ madison_all_modes %>%
        caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes") +
     my_theme()
 ```
-```{r}
+One take-away from this chart is that things haven't changed much in Madison. About two thirds of people keep driving to work; about 10 % each walk or take the bus; and about 5% each work from home or bike. The year-to-year variation most likely is within the margin of error.
 
-library(waffle)
+So far, so bad. One thing we need to keep in mind: The *proportion* of people commuting to work by car, bus, bike, etc. is one thing. But Madison is a growing city, and for things like congestion or CO<sub>2</sub> emissions, we have to look at *absolute* numbers:
 
-madison_all_modes %>% 
-  ggplot(aes(fill = trans_mode, values = estimate)) +
-  geom_waffle(color = "white", n_rows = 10, flip = TRUE) +
-  facet_wrap(~year, nrow = 2, strip.position = "bottom") +
-  scale_color_viridis_d() +
-    scale_x_discrete() + 
-  scale_y_continuous(labels = function(x) x * 10, # make this multiplyer the same as n_rows
-                     expand = c(0,0))
-  
+```{r plot-number-of-workers}
+
+madison %>% 
+  filter(variable == "S0801_C01_001") %>% 
+  ggplot(aes(year, estimate)) + 
+  geom_line(size = 1.2) +
+  labs(x = "Year", y = "Number of workers", title = "The total number of workers has grown steadily",
+       caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes") +
+  scale_x_continuous(breaks = seq(2011, 2019, 2)) +
+  my_theme()
 ```
 
+```{r create-worker-numbers}
+workers_2011 <- madison %>% filter(variable == "S0801_C01_001" & year == 2011) %>% select(estimate)
+workers_2019 <- madison %>% filter(variable == "S0801_C01_001" & year == 2019) %>% select(estimate)
+```
+
+Compared to 2011, there are `r format(workers_2019-workers_2011, scientific = F)` more working Madisonians in 2019. So if, say, the car commute share stayed the same over that period, there'd be *more* cars on the road. We can look at these absolute numbers:
+
+
+```{r get-absolute-data-madison}
+B08006 <- map_df(2011:2019, function(x){
+  get_acs(geography = "place", 
+          year = x, 
+          survey = "acs1", 
+          state = "WI", 
+          table = "B08006",
+          cache_table = T) %>%
+    mutate(year = x)
+})
+```
+
+```{r plot-absolute-numbers-madison}
+B08006_msn <- B08006 %>% 
+  filter(NAME == "Madison city, Wisconsin" & variable %in% c("B08006_014", "B08006_002")) %>%
+  mutate(variable = case_when(variable == "B08006_014" ~ "Bike",
+                              T ~ "Drive"),
+         variable = fct_reorder(variable, desc(estimate))) 
+B08006_msn %>% 
+  group_by(variable) %>% 
+  ggplot(aes(year, estimate, color = variable)) +
+  scale_color_viridis_d() +
+  geom_line(size = 1.2) +
+  geom_text(data = B08006_msn %>% filter(year == 2019), aes(label = variable), nudge_x = .1,
+            check_overlap = T,
+            hjust = 0) +
+  scale_x_continuous(limits = c(2011, 2019.3), breaks = seq(2011, 2019, 2)) +
+  labs(title = "Number of car and bike commuters in Madison",
+       x = "Year",
+       y = "Number of commuters",
+       caption = "Data: American Community Survey 1-year estimates. Visualization: Harald Kliems for Madison Bikes") +
+  my_theme() +
+  theme(legend.position = "none")
+```
+
+```{r create-absolute-numbers}
+drivers_2019 <- B08006_msn %>% 
+  filter(variable == "Drive" & year == 2019) %>% 
+  select(estimate)
+drivers_2011 <- B08006_msn %>% 
+  filter(variable == "Drive" & year == 2011) %>% 
+  select(estimate)
+bikers_2019 <- B08006_msn %>% 
+  filter(variable == "Bike" & year == 2019) %>% 
+  select(estimate)
+bikers_2011 <- B08006_msn %>% 
+  filter(variable == "Bike" & year == 2011) %>% 
+  select(estimate)
+
+```
+
+Because of the large difference between driving and biking, it's a little hard to see in the chart, but compared to 2011, in 2019 there were `r format(drivers_2019 - drivers_2011, scientific = F)` (`r round(100 - (drivers_2011 / drivers_2019 *100), 0)`%) more car commuters but only `r format(bikers_2019 - bikers_2011, scientific = F)` "more" bike commuters in Madison.
+
+Trips to work account for [less than 20%](https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf) of all trips. So is it possible that overall biking is still growing in Madison? Maybe people drive to work, but bike more to the grocery store or for recreation? We do have one source that can help answer this question: The Eco-Counters on the Southwest Path and the Capital City Trail. [Their](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-capital-city-trail-bike-counts) [data](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-southwest-path-bike-counts) doesn't reach back all the way to 2011, but we do have several year's worth of counts:
+
+```{r get-counter-data}
+library(lubridate)
+# note that the date format for the two counters is different!
+cc_counts <- read_csv("https://opendata.arcgis.com/datasets/367cb53685c74628b4975d8f65d20748_0.csv", col_types = "ci-") %>% 
+  mutate(location = "Cap City at North Shore",
+         Count_Date = mdy_hm(Count_Date))
+sw_counts <- read_csv("https://opendata.arcgis.com/datasets/8860784eb30e4a45a6f853b5f81949f2_0.csv", col_types = "ci-") %>% 
+  mutate(location = "SW Path at Randall",
+         Count_Date = dmy_hms(Count_Date))
+```
+```{r plot-counter-data}
+
+counts <- bind_rows(cc_counts, sw_counts)
+counts %>% 
+  group_by(year(Count_Date)) %>% 
+  filter(year(Count_Date) %in% 2016:2019) %>% 
+  ggplot(aes(year(Count_Date), Count, fill = location)) +
+  scale_fill_viridis_d() +
+  geom_col() +
+  my_theme() +
+  labs(title = "Annual bike counts on the Cap City and SW Path",
+       y = element_blank(),
+       x = "Year",
+       caption = "Data: City of Madison OpenData. Visualization: Harald Kliems for Madison Bikes")
+
+```
+This seems to confirm: Not only is the number of people commuting to work by bike stagnating; the overall number of bike trips (at least at these two locations) has gone down as well.
+
+What to make of all this? Madison has a reputation for being bike friendly. The League of American Bicyclists has designate us a Platinum Bike-Friendly Community, and in the latest [Places for Bikes City Rating](https://cityratings.peopleforbikes.org/city/madison/) we came in second. New bike infrastructure keeps being built. Our mayor joined a ride celebrating Madison Bike Week last year. The head of Madison's Department of Transportation and the City Traffic Engineer are bike commuters. And still: All this doesn't translate into a shift away from cars and toward biking.
+
+National trends like low gas prices certainly play a role. But probably as important is the fact that locally we have still have policies and procedures in place that making driving the easy, cheap, and convenient choice. Each bike infrastructure improvement is outmatched by yet another parking garage, another lane on the Beltline, a new subdivision or corporate campus at the edge of town, or a signal retiming to keep cars moving.
+
+It will take sustained collective action, day after day, year after year, to move the needle. Madison Bikes is one piece of that collective action, but we can't do it without you. Write to your Alder, provide testimony at public meetings, organize your neighborhood, [join our board of directors](https://www.madisonbikes.org/2020/09/join-the-board-of-madison-bikes/), [support us financially](https://www.madisonbikes.org/donate/).
