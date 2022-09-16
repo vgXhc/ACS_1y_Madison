@@ -52,9 +52,9 @@ my_theme <- function() {
               )
 }
 ```
-Once a year in September, the US Census Bureau publishes the latest annual data from the [American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs/). Included is information about how people commute to work. Transportation planners and advocates often rely on this data. Not so much because it is the one best data, but because we don't have a whole lot of other data about biking. This post will take deep dive into the commuting data for Madison over the past couple years.
+Once a year in September, the US Census Bureau publishes the latest annual data from the [American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs/). Included is information about how people commute to work. Transportation planners and advocates often rely on this data. Not so much because it is the absolutely best data, but because we don't have a whole lot of other data about biking. This post takes a deep dive into the commuting data for Madison over the past couple years.
 
-Let's start with bike commuting: What's the proportion of people biking to work in the City of Madison, and how has it changed over time?
+Let's start with bike commuting: What's the proportion of people biking to work[^1] in the City of Madison, and how has it changed over time?
 
 ```{r plot-madison-bike-commute}
 #filter to bike mode share only and plot with error bars
@@ -247,7 +247,7 @@ bikers_2011 <- B08006_msn %>%
 
 Because of the large difference between driving and biking, it's a little hard to see in the chart, but compared to 2011, in 2019 there were `r format(drivers_2019 - drivers_2011, scientific = F)` (`r round(100 - (drivers_2011 / drivers_2019 *100), 0)`%) more car commuters but only `r format(bikers_2019 - bikers_2011, scientific = F)` "more" bike commuters in Madison.
 
-Trips to work account for [less than 20%](https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf) of all trips. So is it possible that overall biking is still growing in Madison? Maybe people drive to work, but bike more to the grocery store or for recreation? We do have one source that can help answer this question: The Eco-Counters on the Southwest Path and the Capital City Trail. [Their](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-capital-city-trail-bike-counts) [data](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-southwest-path-bike-counts) doesn't reach back all the way to 2011, but we do have several year's worth of counts:
+Trips to work account for [less than 20%](https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf) of all trips. So is it possible that overall biking is still growing in Madison? Maybe people drive to work, but bike more to the grocery store or for recreation? We do have one source that can help answer this question: The Eco-Counters on the Southwest Path and the Capital City Trail. [Their](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-capital-city-trail-bike-counts) [data ](https://data-cityofmadison.opendata.arcgis.com/datasets/eco-totem-southwest-path-bike-counts) don't reach back all the way to 2011, but we do have several year's worth of counts:
 
 ```{r get-counter-data}
 library(lubridate)
@@ -282,3 +282,5 @@ What to make of all this? Madison has a reputation for being bike friendly. The 
 National trends like low gas prices certainly play a role. But probably as important is the fact that locally we have still have policies and procedures in place that making driving the easy, cheap, and convenient choice. Each bike infrastructure improvement is outmatched by yet another parking garage, another lane on the Beltline, a new subdivision or corporate campus at the edge of town, or a signal retiming to keep cars moving.
 
 It will take sustained collective action, day after day, year after year, to move the needle. Madison Bikes is one piece of that collective action, but we can't do it without you. Write to your Alder, provide testimony at public meetings, organize your neighborhood, [join our board of directors](https://www.madisonbikes.org/2020/09/join-the-board-of-madison-bikes/), [support us financially](https://www.madisonbikes.org/donate/).
+
+[^1]: Maybe more precisely one would have to say "use biking as their main mode of transportation to work". The actual question in the ACS is: "How did this person usually get to work LAST WEEK? If this  person used more than one method of transportation during the trip, mark (x) the box of the one used for most of the distance." Note the qualification about "used for most of the distance." Someone who bikes from their home on the far west side to the nearest bus stop and then takes the bus downtown? They would be counted as a bus commuter. Also note the word "usually." Someone who rides their bike two days a week and takes the bus on the other days? Again, a public transit commuter, according to the survey.

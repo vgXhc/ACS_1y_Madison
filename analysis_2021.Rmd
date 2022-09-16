@@ -1,0 +1,114 @@
+---
+title: "Untitled"
+description: |
+  A new article created using the Distill format.
+author:
+  - name: Nora Jones 
+    url: https://example.com/norajones
+    affiliation: Spacely Sprockets
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+
+# Mode share over time
+
+```{r}
+library(tmap)
+library(tidycensus)
+library(tidyverse)
+
+variables <- load_variables(dataset = "acs1/subject", year = "2021")
+
+get_msn_mode_share <- function(year) {
+  acs_data <- get_acs(year = year, survey = "acs1", table = "S0801", geography = "place", state = 55)
+  acs_data |> 
+    filter(NAME == "Madison city, Wisconsin") |> 
+    mutate(year = year)
+}
+
+
+variable_readable = case_when(
+  variable == "S0801_C01_002" ~ "Drive",
+  variable == "S0801_C01_009" ~ "Transit",
+  variable == "S0801_C01_010" ~ "Walk",
+  variable == "S0801_C01_011" ~ "Bike",
+  variable == "S0801_C01_013" ~ "Work from home",
+  variable == "S0801_C02_002" ~ "Drive, male",
+  variable == "S0801_C02_009" ~ "Transit, male",
+  variable == "S0801_C02_010" ~ "Walk, male",
+  variable == "S0801_C02_011" ~ "Bike, male",
+  variable == "S0801_C02_013" ~ "Work from home, male",
+  variable == "S0801_C03_002" ~ "Drive, female",
+  variable == "S0801_C03_009" ~ "Transit, female",
+  variable == "S0801_C03_010" ~ "Walk, female",
+  variable == "S0801_C03_011" ~ "Bike, female",
+  variable == "S0801_C03_013" ~ "Work from home, female",
+  
+  
+)
+
+
+
+msn_mode_share <- map_dfr(c(2010:2019, 2021), get_msn_mode_share)
+
+msn_mode_share <- msn_mode_share |> 
+  mutate(gender = case_when(str_detect(variable, "^S0801_C01") ~ "total",
+                            str_detect(variable, "^S0801_C02") ~ "male",
+                            str_detect(variable, "^S0801_C03") ~ "female"),
+         mode_readable = case_when(
+           str_detect(variable, "S0801_C0[1-3]_002") ~ "Drive",
+           str_detect(variable, "S0801_C0[1-3]_009") ~ "Transit",
+           str_detect(variable, "S0801_C0[1-3]_010") ~ "Walk",
+           str_detect(variable, "S0801_C0[1-3]_011") ~ "Bike",
+           str_detect(variable, "S0801_C0[1-3]_013") ~ "Work from home"))
+        
+
+
+madison_bike_wfh |> 
+  #filter(variable != "S0801_C01_002") |> 
+  group_by(variable_readable, year) |> 
+  ggplot(aes(year, estimate, color = variable_readable)) +
+  geom_line(size = 1.5) +
+  hrbrthemes::scale_color_ipsum(name = element_blank()) +
+  geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), alpha = .4) +
+  hrbrthemes::theme_ipsum() +
+  scale_x_continuous(breaks = c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021), minor_breaks = NULL, limits = c(2010, 2022)) +
+  ylab("estimate (%)") +
+
+  labs(title = "The rate of working home almost quintupled between 2019 and 2021",
+       subtitle ="City of Madison commute mode share, 2010-2021",
+       caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") +
+    ggrepel::geom_text_repel(data = madison_bike_wfh |> filter(year == 2021 ), aes(label = paste0(variable_readable, " ", estimate, "%")), nudge_x = 1) +
+  theme(legend.position = "none")
+
+
+msn_mode_share |> 
+  filter(!is.na(mode_readable)) |> 
+  group_by(mode_readable, year, gender) |> 
+  ggplot(aes(year, estimate, color = mode_readable)) +
+  geom_line(size = 1.5) +
+  hrbrthemes::scale_color_ipsum(name = element_blank()) +
+  geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), size = 1.3, fatten = 1.5, alpha = .7) +
+  hrbrthemes::theme_ipsum() +
+  scale_x_continuous(breaks = c(2010, 2012, 2014, 2016,  2019, 2021), minor_breaks = NULL, limits = c(2010, 2023)) +
+  ylab("estimate (%)") +
+  
+  labs(title = "How people get to work in Madison does not differ by gender",
+       subtitle ="City of Madison commute mode share, 2010-2021",
+       caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") +
+  ggrepel::geom_text_repel(data = msn_mode_share |> filter(year == 2021 & !is.na(mode_readable) ), aes(label = paste0(mode_readable, " ", estimate, "%")), nudge_x = 1) +
+  theme(legend.position = "none") +
+  facet_wrap(~ fct_relevel(gender, "total", "female", "male"))
+
+
+```
+
+# Mode share by race and ethnicity

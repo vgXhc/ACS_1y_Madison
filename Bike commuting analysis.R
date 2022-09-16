@@ -12,13 +12,16 @@ v17 <- load_variables(2017, "acs1/subject", cache = TRUE)
 v18 <- load_variables(2018, "acs1", cache = TRUE)
 
 
+# get relevant variables for subject tables
+
+
 #define variables for total number commuters and total bike commuters
 vars <- c("B08006_001", "B08006_014")
 
 year <- c(seq(2016, 2017, by=1))
 
 
-places <- get_acs(geography = "place", table = "S0802", state = "WI", year = 2017)
+places <- get_acs(geography = "place", table = "S0802", state = "WI", year = 201)
 
 us <- unique(fips_codes$state)[1:51]
 
@@ -77,7 +80,7 @@ get_acs(geography = "place", state = 55, variables = vars, year = 2011, survey =
 
 #get Madison data for each year, join with variable names
 madison <- map_df(year, function(x) {
-  get_acs(geography = "place", state = "WI", variables = vars, year = x, survey = "acs1", cache_table = TRUE) %>%
+  get_acs(geography = "place", state = "WI", variables = vars, year = x, survey = "acs1/subject", cache_table = TRUE) %>%
     mutate(year = x) %>%
   filter(NAME == "Madison city, Wisconsin")}) %>%
   left_join(v18, by = c("variable" = "name")) %>%
