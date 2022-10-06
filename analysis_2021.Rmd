@@ -9,14 +9,12 @@ author:
     affiliation_url: https://example.com/spacelysprokets
 date: "`r Sys.Date()`"
 output: distill::distill_article
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
-
-
-
 
 # Mode share over time
 
@@ -70,45 +68,168 @@ msn_mode_share <- msn_mode_share |>
            str_detect(variable, "S0801_C0[1-3]_011") ~ "Bike",
            str_detect(variable, "S0801_C0[1-3]_013") ~ "Work from home"))
         
+# data frame for the ggrepel labels on the right of the plot
+msn_mode_share_2021 <-  msn_mode_share |> 
+  filter(year == 2021 & !is.na(mode_readable))
 
-
-madison_bike_wfh |> 
-  #filter(variable != "S0801_C01_002") |> 
-  group_by(variable_readable, year) |> 
-  ggplot(aes(year, estimate, color = variable_readable)) +
+msn_mode_share |> 
+  filter(!is.na(mode_readable) & gender == "total") |> 
+  group_by(mode_readable, year) |> 
+  ggplot(aes(year, estimate, color = mode_readable)) +
   geom_line(size = 1.5) +
-  hrbrthemes::scale_color_ipsum(name = element_blank()) +
-  geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), alpha = .4) +
+  hrbrthemes::scale_color_ipsum(
+    #name = element_blank()
+    ) +
+  geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), alpha = .8,
+                  size = 1,fatten = 1) +
   hrbrthemes::theme_ipsum() +
   scale_x_continuous(breaks = c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021), minor_breaks = NULL, limits = c(2010, 2022)) +
   ylab("estimate (%)") +
-
   labs(title = "The rate of working home almost quintupled between 2019 and 2021",
        subtitle ="City of Madison commute mode share, 2010-2021",
        caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") +
-    ggrepel::geom_text_repel(data = madison_bike_wfh |> filter(year == 2021 ), aes(label = paste0(variable_readable, " ", estimate, "%")), nudge_x = 1) +
+    ggrepel::geom_text_repel(data = msn_mode_share_2021 |> filter(gender == "total"), aes(label = paste0(mode_readable, " ", estimate, "%")), nudge_x = 1) +
   theme(legend.position = "none")
+```
 
+## Excluding working from home
 
+# Mode share by gender
+
+Did any of these trends differ by gender?
+Especially for biking, research has shown that women are often underrepresented in bike commuting, take fewer trips on bike share bikes, and generally have different travel patterns compared to men.[@hosford2019; @ravensbergen2022] In the 2021 data for Madison, we do not see these differences.
+Looking only at the estimates, it may appear that for bike commuting there is indeed a gender difference: `r msn_mode_share |> filter(gender == "male" & mode_readable == "Bike" & year == 2021 |> pull()`% of men rode their bike to work whereas only `r msn_mode_share |> filter(gender == "female" & mode_readable == "Bike" & year == 2021 |> pull()`% of women did so. But when we look at the error bars around the estimates, we see that for all modes they overlap between the two genders.[^ This doesn't necessarily mean that there _aren't_ gender differences; it just means that the differences we see in the data may well be explained by chance.]
+
+```{r eval=FALSE, echo=FALSE}
+# faceted plot by gender
 msn_mode_share |> 
   filter(!is.na(mode_readable)) |> 
   group_by(mode_readable, year, gender) |> 
   ggplot(aes(year, estimate, color = mode_readable)) +
   geom_line(size = 1.5) +
-  hrbrthemes::scale_color_ipsum(name = element_blank()) +
+  hrbrthemes::scale_color_ipsum(name = "element_blank()") +
   geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), size = 1.3, fatten = 1.5, alpha = .7) +
   hrbrthemes::theme_ipsum() +
   scale_x_continuous(breaks = c(2010, 2012, 2014, 2016,  2019, 2021), minor_breaks = NULL, limits = c(2010, 2023)) +
   ylab("estimate (%)") +
-  
   labs(title = "How people get to work in Madison does not differ by gender",
        subtitle ="City of Madison commute mode share, 2010-2021",
        caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") +
-  ggrepel::geom_text_repel(data = msn_mode_share |> filter(year == 2021 & !is.na(mode_readable) ), aes(label = paste0(mode_readable, " ", estimate, "%")), nudge_x = 1) +
+  geom_text(data = msn_mode_share_2021, aes(label = paste0(mode_readable, " ", estimate, "%")), nudge_x = 1) +
   theme(legend.position = "none") +
   facet_wrap(~ fct_relevel(gender, "total", "female", "male"))
+```
 
-
+```{r gender-plot}
+msn_mode_share_2021 |> 
+  filter(gender != "total") |> 
+  ggplot(aes(fct_reorder(mode_readable, estimate), estimate, color = gender)) +
+  geom_pointrange(aes(ymin = estimate - moe, ymax = estimate + moe), 
+                  size = 2, 
+                  fatten = 1.2,
+                  #alpha = .7,
+                  position = position_dodge(width = 0.3)) +
+  coord_flip() +
+  hrbrthemes::scale_color_ipsum(name = element_blank(),
+                                breaks = c("male", "female"),
+                                guide = guide_legend(override.aes = list(shape = NA, size = 5))) +
+  hrbrthemes::theme_ipsum() +
+  theme(panel.grid.major.y = element_blank()) +
+  ylab("estimate (%)") +
+  xlab(element_blank()) +
+  labs(title = "How people get to work in Madison\ndoes not differ by gender",
+       subtitle = "2021 estimates and 90% margin of error",
+       caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") +
+   annotate(
+    geom = "curve", x = "Transit", y = 15, xend = "Bike", yend = 3, 
+    curvature = -.3, arrow = arrow(length = unit(2, "mm"))
+  ) +
+  annotate(geom = "text", y = 15, x = "Transit", label = "Error bars still overlap", hjust = "left")
 ```
 
 # Mode share by race and ethnicity
+Much has been written about the racial disparities of the COVID epidemic. Who was and wasn't infected, the outcomes of an infection, and who was and wasn't able to work from home often followed the patterns of structural racism. The American Community Survey data does provide a breakdown of commute modes by race. But there are some important things to keep in mind: The more you break down the data into smaller categories, the larger the margins of error get. We already saw above that for the total population or for the mode share by gender, the margins of error were already sizable. If we now look at different race and ethnicity data, this becomes even more problematic. And because Madison is predominantly White, the error margins are largest for non-White population groups. So when you look at the following graph, focus on the wide error bars and not just the point estimates. Whenever the error bars overlap, the difference between the two groups is likely due to chance.
+
+```{r}
+get_commute_by_race <- function(table_id) {
+  get_acs(geography = "place",
+                           state = "WI",
+                           survey = "acs1",
+                           year = 2021,
+                           table = table_id,
+          summary_var = paste0(table_id, "_001")) |> 
+    mutate(table = table_id,
+           )
+}
+
+
+tables <- c("B08105A", 
+            "B08105B", 
+            "B08105C", 
+            "B08105D", 
+            "B08105E",
+            "B08105F",
+            "B08105G",
+            "B08105H",
+            "B08105I")
+
+commute_by_race <- map_dfr(tables, get_commute_by_race)
+
+commute_by_race_msn <- commute_by_race |> 
+  filter(NAME == "Madison city, Wisconsin") |> 
+  mutate(race_ethnicity = case_when(str_detect(table, "A$") ~ "White Alone",
+                                    str_detect(table, "B$") ~ "Black or African American Alone",
+                                    str_detect(table, "C$") ~ "American Indian and Alaska Native Alone",
+                                    str_detect(table, "D$") ~ "Asian Alone",
+                                    str_detect(table, "E$") ~ "Native Hawaiian Alone",
+                                    str_detect(table, "F$") ~ "Other Race Alone",
+                                    str_detect(table, "G$") ~ "Two or more races",
+                                    str_detect(table, "H$") ~ "Non-Hispanic White",
+                                    str_detect(table, "I$") ~ "Hispanic or Latino"),
+         mode_readable = case_when(
+           str_detect(variable, "B08105[:alpha:]_001") ~ "Total",
+           str_detect(variable, "B08105[:alpha:]_002") ~ "Drove alone",
+           str_detect(variable, "B08105[:alpha:]_003") ~ "Carpooled",
+           str_detect(variable, "B08105[:alpha:]_004") ~ "Transit",
+           str_detect(variable, "B08105[:alpha:]_005") ~ "Walked",
+           str_detect(variable, "B08105[:alpha:]_006") ~ "Cab, motorcycle, bike, other",
+           str_detect(variable, "B08105[:alpha:]_007") ~ "Work from home")) |> 
+  filter(!is.na(estimate))
+
+
+commute_by_race_msn |> 
+  mutate(proportion = estimate / summary_est,
+         prop_moe = moe_prop(estimate, summary_est, moe, summary_moe),
+         ratio_moe = moe_ratio(estimate, summary_est, moe, summary_moe)) |> view() 
+  filter(mode_readable != "Total" & race_ethnicity != "Two or more races" & race_ethnicity != "White Alone") |> 
+  ggplot(aes(fct_reorder(mode_readable, proportion), proportion, color = race_ethnicity)) +
+  geom_pointrange(aes(ymin = proportion - prop_moe, ymax = proportion + prop_moe),
+                  position = position_dodge(width = 0.3)) +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent) +
+  hrbrthemes::theme_ipsum() +
+  theme(panel.grid.major.y = element_blank()) +
+  ylab("estimate") +
+  xlab(element_blank())
+```
+
+Let's go through mode-by-mode:
+- For driving alone, all the error bars overlap, except for non-Hispanic White compared to Black. Black commuters appear to drive to work at a higher proportion than non-Hispanic White ones
+- For working from home we see a split between non-Hispanic White and Asian on the higher end and Black and Hispanic/Latino on the lower end. Much has been written how some jobs that were deemed essential, such as care or service work as well as many manufacturing jobs, are ones that can't be done remotely and that are often done by Black or Hispanic workers.
+- The share of people walking to work doesn't differ between any of the groups
+- Carpooling appears to be especially common among Hispanic/Latino workers. But note the wide error bar again: The only pairing where the bars do not overlap is between Hispanic/Latino and non-Hispanic White.
+- The next category lumps together cabs, motorcycles, bicycles, and other means of transportation to work. Like with walking, there are no significant differences between the groups.
+- The same is true for transit: All the error bars overlap, i.e. no significant differences.
+
+# Analysis webinar
+
+Trips to work only make up about 20% of all our trips.
+And the American Community Survey data has a number of other limitations.
+Therefore we can only conclude so much from it and should try to include other sources of data about biking in Madison.
+One such source are the numerous bike counters that we have on our paths and roads.
+The two most well-known ones are the Eco-Counter displays on the Southwest Path at Camp Randall and on the Cap City Trail at North Shore Drive.
+But there are numerous other counters throughout the city, and we're in the fortunate position to have help with analyzing the data from these counters: We (as well as our friends from Bike Fitchburg) were awarded a data analysis grant from the League of American Bicyclists and Eco-Counter!
+With the help from the city, we sent them our data and they will analyze it.
+We don't know yet what the results are going to be, but it will certainly be interesting!
+Save the date for a webinar on October 26 where we will present results from the analysis and show how they are important for our advocacy
+

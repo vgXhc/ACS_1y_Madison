@@ -1,0 +1,126 @@
+---
+title: "Dane and MKE population density"
+author: "Harald Kliems"
+date: "10/3/2022"
+output: 
+  html_document:
+    toc: true
+---
+A quick look at population density data from Madison and Milwaukee, using `tidycensus`, `tmap`, and `mapdeck`. 
+# Data
+Block-group level data from the 2020 Census.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, message = F, warning = F, message = F)
+```
+
+```{r results=F}
+library(sf)
+library(tmap)
+library(tidycensus)
+library(tidyverse)
+
+# pop_block_msn <- get_decennial(geography = "block", 
+#                      variables = "P1_001N", 
+#                      state = "WI",
+#                      county = "Dane",
+#                      year = 2020,
+#                geometry = TRUE,
+#                      keep_geo_vars = TRUE)
+
+
+pop_block_group_msn <- get_decennial(geography = "block group", 
+                     variables = "P1_001N", 
+                     state = "WI",
+                     county = "Dane",
+                     year = 2020,
+               geometry = TRUE,
+                     keep_geo_vars = TRUE)
+
+pop_block_group_mke <- get_decennial(geography = "block group", 
+                     variables = "P1_001N", 
+                     state = "WI",
+                     county = "Milwaukee",
+                     year = 2020,
+               geometry = TRUE,
+                     keep_geo_vars = TRUE)
+
+pop_bg_msn <- pop_block_group_msn %>% 
+  mutate(pop_density =  as.numeric(units::set_units(value / st_area(.), "1/km2"))) |> 
+  filter(pop_density != 0)
+
+pop_bg_mke  <- pop_block_group_mke %>% 
+  mutate(pop_density =  as.numeric(units::set_units(value / st_area(.), "1/km2"))) |> 
+  filter(pop_density != 0)
+
+
+tmap_mode("view")
+```
+
+# Madison
+
+```{r}
+library(DT)
+pop_bg_msn |> 
+  st_drop_geometry() |> 
+  select(block_group = NAME.y, population = value, pop_density) |> 
+  datatable()
+
+```
+
+```{r}
+tm_shape(pop_bg_msn) +
+  tm_polygons("pop_density", 
+              title = "Population (1/km^2)",
+              style = "jenks",
+              alpha = .7,
+              popup.vars = c("Tract" = "TRACTCE", "Population density (1/km^2)" = "pop_density", "Population" = "value"),
+              id = "NAMELSAD")
+
+```
+# Milwaukee
+```{r}
+pop_bg_mke |> 
+  st_drop_geometry() |> 
+  select(block_group = NAME.y, population = value, pop_density) |> 
+  datatable()
+```
+
+```{r}
+tm_shape(pop_bg_mke) +
+  tm_polygons("pop_density", 
+              title = "Population (1/km^2)",
+              style = "jenks",
+              alpha = .7,
+              popup.vars = c("Tract" = "TRACTCE", "Population density (1/km^2)" = "pop_density", "Population" = "value"),
+              id = "NAMELSAD")
+```
+
+# 3D
+Right click to tilt and pan.
+```{r}
+library(mapdeck)
+
+mapdeck(style = mapdeck_style("light")) %>%
+  add_polygon(
+    data = pop_bg_msn |> mutate(pop_density = pop_density/4)
+    , layer = "polygon_layer"
+    , fill_colour = "pop_density"
+    , elevation = "pop_density",
+    fill_opacity = .3,
+    legend = F
+  )
+```
+
+```{r}
+mapdeck(style = mapdeck_style("light")) %>%
+  add_polygon(
+    data = pop_bg_mke |> mutate(pop_density = pop_density/4)
+    , layer = "polygon_layer"
+    , fill_colour = "pop_density"
+    , elevation = "pop_density",
+    fill_opacity = .3,
+    legend = F
+  )
+```
+
