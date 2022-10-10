@@ -1,7 +1,7 @@
 ---
-title: "Untitled"
+title: "What's the latest on commute mode share in Madison?"
 description: |
-  A new article created using the Distill format.
+  Working from home has seen an unprecedented boom, while biking stagnates.
 author:
   - name: Nora Jones 
     url: https://example.com/norajones
@@ -16,42 +16,50 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-# Mode share over time
+One of the high holidays for census data nerds is ACSmas: The annual release of 1-year estimates from the American Community Survey. Last year's ACSmas was cancelled because of the pandemic, but this September we finally got our fix of data for 2021. 
 
-```{r}
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">ACSmas is cancelled this year, everything sucks <a href="https://t.co/rGsjpg0WE7">https://t.co/rGsjpg0WE7</a></p>&mdash; dadbode miller (@bikepedantic) <a href="https://twitter.com/bikepedantic/status/1420836792262090753?ref_src=twsrc%5Etfw">July 29, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+
+I was especially excited/anxious about the commuting data: What did the pandemic do to people's trips to work? How much of a shift to working from home would we see? And was the data quality actually going to be good enough to draw any firm conclusions? Let's look at the data for the City of Madison.
+
+# Mode share over time
+ACS mode share data is available all the way back to 2010. In [previous posts on the Madison Bikes blog](https://www.madisonbikes.org/2020/09/biking-numbers-in-madison-not-so-great/) I had already looked at these time series data -- and frankly, it was not that exciting: By and large the percentages of different modes of getting to worked stayed the same. Biking didn't grow but neither shrunk. It seemed highly likely that the pandemic would have changed that. And it did: 
+
+```{r, layout="l-page"}
 library(tmap)
 library(tidycensus)
 library(tidyverse)
+library(gt)
 
-variables <- load_variables(dataset = "acs1/subject", year = "2021")
+# variables <- load_variables(dataset = "acs1/subject", year = "2021")
 
 get_msn_mode_share <- function(year) {
-  acs_data <- get_acs(year = year, survey = "acs1", table = "S0801", geography = "place", state = 55)
+  acs_data <- get_acs(year = year, survey = "acs1", table = "S0801", geography = "place", state = 55, cache_table=T)
   acs_data |> 
     filter(NAME == "Madison city, Wisconsin") |> 
     mutate(year = year)
 }
 
 
-variable_readable = case_when(
-  variable == "S0801_C01_002" ~ "Drive",
-  variable == "S0801_C01_009" ~ "Transit",
-  variable == "S0801_C01_010" ~ "Walk",
-  variable == "S0801_C01_011" ~ "Bike",
-  variable == "S0801_C01_013" ~ "Work from home",
-  variable == "S0801_C02_002" ~ "Drive, male",
-  variable == "S0801_C02_009" ~ "Transit, male",
-  variable == "S0801_C02_010" ~ "Walk, male",
-  variable == "S0801_C02_011" ~ "Bike, male",
-  variable == "S0801_C02_013" ~ "Work from home, male",
-  variable == "S0801_C03_002" ~ "Drive, female",
-  variable == "S0801_C03_009" ~ "Transit, female",
-  variable == "S0801_C03_010" ~ "Walk, female",
-  variable == "S0801_C03_011" ~ "Bike, female",
-  variable == "S0801_C03_013" ~ "Work from home, female",
-  
-  
-)
+# variable_readable = case_when(
+#   variable == "S0801_C01_002" ~ "Drive",
+#   variable == "S0801_C01_009" ~ "Transit",
+#   variable == "S0801_C01_010" ~ "Walk",
+#   variable == "S0801_C01_011" ~ "Bike",
+#   variable == "S0801_C01_013" ~ "Work from home",
+#   variable == "S0801_C02_002" ~ "Drive, male",
+#   variable == "S0801_C02_009" ~ "Transit, male",
+#   variable == "S0801_C02_010" ~ "Walk, male",
+#   variable == "S0801_C02_011" ~ "Bike, male",
+#   variable == "S0801_C02_013" ~ "Work from home, male",
+#   variable == "S0801_C03_002" ~ "Drive, female",
+#   variable == "S0801_C03_009" ~ "Transit, female",
+#   variable == "S0801_C03_010" ~ "Walk, female",
+#   variable == "S0801_C03_011" ~ "Bike, female",
+#   variable == "S0801_C03_013" ~ "Work from home, female",
+#   
+#   
+# )
 
 
 
@@ -92,15 +100,130 @@ msn_mode_share |>
   theme(legend.position = "none")
 ```
 
+From 2019 to 2021, the share of people working from home almost  quintupled! Fewer people drove to work, and commuting by bus became much less common. For walking and biking the changes were downward too but within the margins of error.
+
+```{r, layout="l-page"}
+msn_mode_share |> 
+  filter(!is.na(mode_readable) & gender == "total" & year >= 2019) |> 
+  group_by(mode_readable, year) |> 
+  pivot_wider(names_from = year, values_from = c(estimate, moe)) |> 
+  ggplot() +
+    geom_segment(aes(x=mode_readable, xend=mode_readable, y=estimate_2019, yend=estimate_2021), color="grey", arrow = arrow(length = unit(2, "mm"))) +
+  geom_point(aes(x = mode_readable, y = estimate_2019), color = 2019) +
+    geom_point(aes(x = mode_readable, y = estimate_2021), color = 2021) +
+  geom_text(aes(x = mode_readable, 
+                y = (estimate_2021 + estimate_2019)/2, 
+                label = paste0(estimate_2021-estimate_2019, "%")),
+            nudge_x = .2)+
+  hrbrthemes::scale_color_ipsum(
+    #name = element_blank()
+    ) +
+  hrbrthemes::theme_ipsum() +
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank()) +
+  ylab("estimate (%)") +
+  xlab(element_blank()) +
+  labs(title = "Changes in commute mode, 2019 to 2021",
+       subtitle ="City of Madison",
+       caption = "American Community Survey 1-year estimates, Table S0801\nVisualization: @HaraldKliems") 
+```
+
+
+
 ## Excluding working from home
+
+When I first shared some of the above graphs some people pointed out: "Working from home isn't really commuting! What do these percentages look like when we only account for the people who still leave the house to get to work?" Or to put it differently: Before the pandemic, you and 99 of your coworkers went to the office every day, and 10 of you biked. In 2021, half of your coworkers now work from home. Of the remaining 50 people in the office, do you still have 5 (or 10%) people who bike to work? 
+
+```{r, layout="l-page"}
+get_msn_mode_counts <- function(year) {
+  acs_data <- get_acs(year = year, survey = "acs1", table = "C08006", geography = "place", state = 55, cache_table=T, summary_var = "C08006_001")
+  acs_data |> 
+    filter(NAME == "Madison city, Wisconsin") |> 
+    mutate(year = year)
+}
+
+msn_counts <- map_dfr(c(2019, 2021), get_msn_mode_counts)
+
+msn_counts <- msn_counts |> 
+  mutate(summary_est = case_when(year == 2019 ~summary_est - 9050,
+                                 year == 2021 ~ summary_est - 40279),
+         mode_readable = case_when(
+    variable == "C08006_001" ~ "Total",
+      variable == "C08006_002" ~ "Drive",
+      variable == "C08006_003" ~ "Drove alone",
+      variable == "C08006_004" ~ "Carpooled",
+      variable == "C08006_008" ~ "Transit",
+      variable == "C08006_009" ~ "Bike",
+      variable == "C08006_010" ~ "Walk",
+      variable == "C08006_011" ~ "Other",
+      variable == "C08006_012" ~ "Work from home"
+  ),
+  mode_share = estimate/summary_est) |> 
+  filter(!is.na(mode_readable)) |> 
+  filter(mode_readable %in% c("Drive", "Transit", "Bike", "Walk", "Other")) |> 
+  mutate(mode_readable = fct_relevel(mode_readable, 
+                                     "Other",
+                                                "Bike", 
+                                                "Walk", 
+                                                "Transit", 
+                                                "Drive")) |> 
+  group_by(year,mode_readable) %>% 
+    mutate(pos = cumsum(mode_share) - mode_share/2)
+msn_counts |> 
+  ggplot(aes(as.factor(year), mode_share, fill = mode_readable)) +
+  geom_col(position = "stack") +
+  geom_text(aes(label = mode_readable), position = position_stack(vjust = 0.5), color = "white") +
+  scale_y_continuous(labels = scales::label_percent()) +
+    hrbrthemes::scale_fill_ipsum(name = "element_blank()") +
+  hrbrthemes::theme_ipsum() +
+  ylab("estimate") +
+  xlab(element_blank()) +
+  theme(legend.position = "none") +
+  labs(title = "Transit commutes have been the big loser",
+       subtitle ="City of Madison commute mode share, 2010-2021, with working from home excluded",
+       caption = "American Community Survey 1-year estimates, Table B08006\nVisualization: @HaraldKliems")
+```
+
+This is the same data in table form.
+
+```{r}
+msn_counts |> 
+  
+  pivot_wider(id_cols = mode_readable, names_from = year, values_from = mode_share, names_prefix = "mode_share_") |> 
+  mutate(change = mode_share_2021- mode_share_2019) |> 
+  select(mode_readable, mode_share_2019, mode_share_2021, change) |>
+  ungroup() |> 
+  gt() |> 
+  tab_header(title = "Change in commute mode for workers not working from home") |> 
+  fmt_percent(columns = c(mode_share_2021, mode_share_2019, change), decimals = 0) |> 
+  tab_spanner(
+    label = "Mode share",
+    columns = c(mode_share_2019, mode_share_2021)
+  ) |> 
+  cols_label(mode_readable = "Commute mode", 
+             mode_share_2021 = "2021",
+             mode_share_2019 = "2019",
+             change = "Change (percentage points)") |> 
+   data_color(
+    columns = c(change),
+    colors = scales::col_numeric(
+      palette = "viridis",
+    domain = NULL )) |> 
+   tab_source_note(
+    source_note = "Data: American Community Survey 1-year estimates, Table B08006. Margins of error not shown."
+  )
+```
+
+Calculating the margins of error for these estimates is complex and I have not done that. But similar to the error bars we have seen above, changes of less than 2% points are probably not meaningful. So what do we take away from the table and chart? Of the people who still commute to the office, taking the bus is much less common whereas driving has gone up. The other percentages are basically unchanged. This makes sense: Bus service was reduced and many people perceived riding the bus as a risk for infection. Conversely, peak hour congestion for drivers went down (remember: overall the number of people commuting by car went _down_ even when their percentage here went _up_) and some employers reduced or waived parking fees.
 
 # Mode share by gender
 
 Did any of these trends differ by gender?
-Especially for biking, research has shown that women are often underrepresented in bike commuting, take fewer trips on bike share bikes, and generally have different travel patterns compared to men.[@hosford2019; @ravensbergen2022] In the 2021 data for Madison, we do not see these differences.
-Looking only at the estimates, it may appear that for bike commuting there is indeed a gender difference: `r msn_mode_share |> filter(gender == "male" & mode_readable == "Bike" & year == 2021 |> pull()`% of men rode their bike to work whereas only `r msn_mode_share |> filter(gender == "female" & mode_readable == "Bike" & year == 2021 |> pull()`% of women did so. But when we look at the error bars around the estimates, we see that for all modes they overlap between the two genders.[^ This doesn't necessarily mean that there _aren't_ gender differences; it just means that the differences we see in the data may well be explained by chance.]
+Especially for biking, research has shown that in the US women are  underrepresented in bike commuting, take fewer trips on bike share bikes, and generally have different travel patterns compared to men.[@hosford2019; @ravensbergen2022] In the 2021 data for Madison, we do not see these differences.
 
-```{r eval=FALSE, echo=FALSE}
+Looking only at the estimates, it may appear that for bike commuting there is indeed a gender difference: `r msn_mode_share |> filter(gender == "male" & mode_readable == "Bike" & year == 2021) |> pull()`% of men rode their bike to work whereas only `r msn_mode_share |> filter(gender == "female" & mode_readable == "Bike" & year == 2021) |> pull()`% of women did so. But when we look at the error bars around the estimates, we see that for all modes they overlap between the two genders.[^ This doesn't necessarily mean that there _aren't_ gender differences; it just means that the differences we see in the data may well be by chance.]
+
+```{r eval=FALSE, echo=FALSE, layout="l-page"}
 # faceted plot by gender
 msn_mode_share |> 
   filter(!is.na(mode_readable)) |> 
@@ -120,7 +243,7 @@ msn_mode_share |>
   facet_wrap(~ fct_relevel(gender, "total", "female", "male"))
 ```
 
-```{r gender-plot}
+```{r, layout="l-page"}
 msn_mode_share_2021 |> 
   filter(gender != "total") |> 
   ggplot(aes(fct_reorder(mode_readable, estimate), estimate, color = gender)) +
@@ -150,14 +273,15 @@ msn_mode_share_2021 |>
 # Mode share by race and ethnicity
 Much has been written about the racial disparities of the COVID epidemic. Who was and wasn't infected, the outcomes of an infection, and who was and wasn't able to work from home often followed the patterns of structural racism. The American Community Survey data does provide a breakdown of commute modes by race. But there are some important things to keep in mind: The more you break down the data into smaller categories, the larger the margins of error get. We already saw above that for the total population or for the mode share by gender, the margins of error were already sizable. If we now look at different race and ethnicity data, this becomes even more problematic. And because Madison is predominantly White, the error margins are largest for non-White population groups. So when you look at the following graph, focus on the wide error bars and not just the point estimates. Whenever the error bars overlap, the difference between the two groups is likely due to chance.
 
-```{r}
+```{r, layout="l-page"}
 get_commute_by_race <- function(table_id) {
   get_acs(geography = "place",
                            state = "WI",
                            survey = "acs1",
                            year = 2021,
                            table = table_id,
-          summary_var = paste0(table_id, "_001")) |> 
+          summary_var = paste0(table_id, "_001"),
+          cache_table = T) |> 
     mutate(table = table_id,
            )
 }
@@ -178,14 +302,14 @@ commute_by_race <- map_dfr(tables, get_commute_by_race)
 commute_by_race_msn <- commute_by_race |> 
   filter(NAME == "Madison city, Wisconsin") |> 
   mutate(race_ethnicity = case_when(str_detect(table, "A$") ~ "White Alone",
-                                    str_detect(table, "B$") ~ "Black or African American Alone",
+                                    str_detect(table, "B$") ~ "Black/African American",
                                     str_detect(table, "C$") ~ "American Indian and Alaska Native Alone",
-                                    str_detect(table, "D$") ~ "Asian Alone",
+                                    str_detect(table, "D$") ~ "Asian",
                                     str_detect(table, "E$") ~ "Native Hawaiian Alone",
                                     str_detect(table, "F$") ~ "Other Race Alone",
                                     str_detect(table, "G$") ~ "Two or more races",
                                     str_detect(table, "H$") ~ "Non-Hispanic White",
-                                    str_detect(table, "I$") ~ "Hispanic or Latino"),
+                                    str_detect(table, "I$") ~ "Hispanic/Latino"),
          mode_readable = case_when(
            str_detect(variable, "B08105[:alpha:]_001") ~ "Total",
            str_detect(variable, "B08105[:alpha:]_002") ~ "Drove alone",
@@ -197,23 +321,50 @@ commute_by_race_msn <- commute_by_race |>
   filter(!is.na(estimate))
 
 
-commute_by_race_msn |> 
+p <- commute_by_race_msn |> 
   mutate(proportion = estimate / summary_est,
          prop_moe = moe_prop(estimate, summary_est, moe, summary_moe),
-         ratio_moe = moe_ratio(estimate, summary_est, moe, summary_moe)) |> view() 
+         ratio_moe = moe_ratio(estimate, summary_est, moe, summary_moe)) |> 
   filter(mode_readable != "Total" & race_ethnicity != "Two or more races" & race_ethnicity != "White Alone") |> 
   ggplot(aes(fct_reorder(mode_readable, proportion), proportion, color = race_ethnicity)) +
   geom_pointrange(aes(ymin = proportion - prop_moe, ymax = proportion + prop_moe),
                   position = position_dodge(width = 0.3)) +
   coord_flip() +
   scale_y_continuous(labels = scales::percent) +
+  hrbrthemes::scale_color_ipsum(name = element_blank()) +
   hrbrthemes::theme_ipsum() +
-  theme(panel.grid.major.y = element_blank()) +
+  theme(panel.grid.major.y = element_blank(),
+        legend.position = "bottom") +
   ylab("estimate") +
   xlab(element_blank())
+
+p+
+  #drive alone
+  annotate(
+    geom = "curve", x = 5.5, y = .75, xend = 6.1, yend = .561, 
+    curvature = -.2, arrow = arrow(length = unit(2, "mm")), 
+  ) +
+    annotate(
+    geom = "curve", x = 5.5, y = .75, xend = 5.95, yend = .575, 
+    curvature = -.7, arrow = arrow(length = unit(2, "mm")), 
+  ) +
+  annotate(geom = "text", y = .755, x = 5.5, label = "Error bars don't overlap", hjust = "left") +
+  #work from home
+    annotate(
+    geom = "curve", x = 5.7, y = .27, xend = 5, yend = .23, 
+    curvature = -.2, arrow = arrow(length = unit(2, "mm")) 
+  ) +
+  annotate(geom = "text", y = .26, x = 5.8, label = "White and Asian commuters are\nmore likely to work from home", hjust = "right") +
+    #carpool
+    annotate(
+    geom = "curve", x = 3.8, y = .23, xend = 3.1, yend = .125, 
+    curvature = .3, arrow = arrow(length = unit(2, "mm")) 
+  ) +
+  annotate(geom = "text", y = .25, x = 3.8, label = "LatinX workers carpool the most\n(but note that wide margin of error)", hjust = "left")
 ```
 
-Let's go through mode-by-mode:
+Let's go through mode by mode:
+
 - For driving alone, all the error bars overlap, except for non-Hispanic White compared to Black. Black commuters appear to drive to work at a higher proportion than non-Hispanic White ones
 - For working from home we see a split between non-Hispanic White and Asian on the higher end and Black and Hispanic/Latino on the lower end. Much has been written how some jobs that were deemed essential, such as care or service work as well as many manufacturing jobs, are ones that can't be done remotely and that are often done by Black or Hispanic workers.
 - The share of people walking to work doesn't differ between any of the groups
